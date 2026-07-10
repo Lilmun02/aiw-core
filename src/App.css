@@ -1,0 +1,62 @@
+ * {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #0b0f19;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+p {
+  color: #a7b0c0;
+}
+
+input {
+  width: 100%;
+  max-width: 500px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #2a3142;
+  background: #111827;
+  color: white;
+  font-size: 16px;
+}
+
+.categories {
+  margin: 25px 0;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.categories button,
+.card button {
+  border: none;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.card {
+  background: #111827;
+  border: 1px solid #242b3b;
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 360px;
+}
