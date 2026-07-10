@@ -5,11 +5,13 @@
         <input
           type="text"
           placeholder="Search AI tools, categories, or features..."
+          aria-label="Search AI tools"
           className="flex-1 bg-transparent px-6 py-4 text-white placeholder:text-slate-500 focus:outline-none"
         />
 
         <button
-          className="bg-blue-600 px-8 font-semibold text-white transition hover:bg-blue-700"
+          type="button"
+          className="bg-blue-600 px-8 font-semibold text-white transition hover:bg-blue-500"
         >
           Search
         </button>
