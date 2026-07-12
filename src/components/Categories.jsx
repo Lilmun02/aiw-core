@@ -1,16 +1,24 @@
  const categories = [
-  { name: "Chatbots", icon: "💬" },
-  { name: "Writing", icon: "✍️" },
-  { name: "Image Generation", icon: "🖼️" },
-  { name: "Video", icon: "🎥" },
-  { name: "Code Assistant", icon: "💻" },
-  { name: "Productivity", icon: "📈" },
+  { name: "Chatbots", searchValue: "Chatbot", icon: "💬" },
+  { name: "Writing", searchValue: "writing", icon: "✍️" },
+  { name: "Image Generation", searchValue: "design", icon: "🖼️" },
+  { name: "Video", searchValue: "video", icon: "🎥" },
+  { name: "Code Assistant", searchValue: "coding", icon: "💻" },
+  { name: "Productivity", searchValue: "productivity", icon: "📈" },
 ];
 
-function Categories() {
+function Categories({ setSearchTerm }) {
+  function handleCategoryClick(searchValue) {
+    setSearchTerm(searchValue);
+
+    document
+      .getElementById("featured")
+      ?.scrollIntoView({ behavior: "smooth" });
+  }
+
   return (
     <section className="mt-16">
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <h2 className="text-3xl font-bold text-white">
           Browse Categories
         </h2>
@@ -24,7 +32,9 @@ function Categories() {
         {categories.map((category) => (
           <button
             key={category.name}
-            className="rounded-2xl border border-slate-700 bg-slate-900 p-5 transition duration-200 hover:border-blue-500 hover:bg-slate-800 hover:scale-105"
+            type="button"
+            onClick={() => handleCategoryClick(category.searchValue)}
+            className="rounded-2xl border border-slate-700 bg-slate-900 p-5 transition duration-200 hover:scale-105 hover:border-blue-500 hover:bg-slate-800"
           >
             <div className="text-3xl">{category.icon}</div>
 

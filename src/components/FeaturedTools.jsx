@@ -1,4 +1,6 @@
- const featuredTools = [
+ import ToolCard from "./ToolCard.jsx";
+
+const featuredTools = [
   {
     name: "ChatGPT",
     category: "Chatbot",
@@ -7,6 +9,24 @@
     icon: "🤖",
     website: "https://chatgpt.com",
     rating: "4.9",
+    listingType: "Launch Spotlight",
+    reviewed: true,
+    similarTools: ["Claude", "Gemini", "Perplexity"],
+    keywords: [
+      "chatgpt",
+      "chat",
+      "assistant",
+      "ai",
+      "code",
+      "coding",
+      "programming",
+      "developer",
+      "python",
+      "javascript",
+      "writing",
+      "research",
+      "productivity",
+    ],
   },
   {
     name: "Canva",
@@ -16,6 +36,24 @@
     icon: "🎨",
     website: "https://www.canva.com",
     rating: "4.8",
+    listingType: "Trending",
+    reviewed: true,
+    similarTools: [
+      "Adobe Express",
+      "Microsoft Designer",
+      "Figma AI",
+    ],
+    keywords: [
+      "design",
+      "logo",
+      "thumbnail",
+      "poster",
+      "flyer",
+      "graphics",
+      "branding",
+      "presentation",
+      "image",
+    ],
   },
   {
     name: "Runway",
@@ -25,10 +63,42 @@
     icon: "🎥",
     website: "https://runwayml.com",
     rating: "4.7",
+    listingType: "New",
+    reviewed: false,
+    similarTools: [
+      "Pika",
+      "Kling",
+      "Veo",
+    ],
+    keywords: [
+      "video",
+      "youtube",
+      "editing",
+      "animation",
+      "movie",
+      "film",
+      "creator",
+    ],
   },
 ];
 
-function FeaturedTools() {
+function FeaturedTools({ searchTerm }) {
+  const search = searchTerm.trim().toLowerCase();
+
+  const filteredTools = featuredTools.filter((tool) => {
+    const searchableText = [
+      tool.name,
+      tool.category,
+      tool.description,
+      tool.listingType,
+      ...tool.keywords,
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return searchableText.includes(search);
+  });
+
   return (
     <section className="mt-16">
       <div className="mb-6 flex items-end justify-between">
@@ -40,61 +110,43 @@ function FeaturedTools() {
           <h2 className="mt-2 text-3xl font-bold text-white">
             Featured AI Tools
           </h2>
+
+          <p className="mt-2 text-sm text-slate-400">
+            Discover launch spotlights, trending AI, and powerful new tools.
+          </p>
         </div>
 
         <button
           type="button"
+          onClick={() =>
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            })
+          }
           className="text-sm font-semibold text-blue-400 transition hover:text-blue-300"
         >
-          View All →
+          Back to Search ↑
         </button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {featuredTools.map((tool) => (
-          <article
-            key={tool.name}
-            className="group rounded-3xl border border-slate-800 bg-slate-900/80 p-6 shadow-xl transition duration-300 hover:-translate-y-1 hover:border-blue-500/70 hover:bg-slate-900"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-800 text-3xl">
-                {tool.icon}
-              </div>
+      {filteredTools.length > 0 ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredTools.map((tool) => (
+            <ToolCard key={tool.name} tool={tool} />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/70 px-6 py-12 text-center">
+          <p className="text-xl font-bold text-white">
+            No AI tools found
+          </p>
 
-              <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-300">
-                Featured
-              </span>
-            </div>
-
-            <p className="mt-6 text-sm font-medium text-blue-400">
-              {tool.category}
-            </p>
-
-            <h3 className="mt-2 text-2xl font-bold text-white">
-              {tool.name}
-            </h3>
-
-            <p className="mt-3 min-h-20 text-base leading-7 text-slate-400">
-              {tool.description}
-            </p>
-
-            <div className="mt-6 flex items-center justify-between border-t border-slate-800 pt-5">
-              <span className="text-sm font-semibold text-amber-400">
-                ★ {tool.rating}
-              </span>
-
-              <a
-                href={tool.website}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
-              >
-                Visit Tool
-              </a>
-            </div>
-          </article>
-        ))}
-      </div>
+          <p className="mt-2 text-slate-400">
+            Try searching by AI name, feature, category, or keyword.
+          </p>
+        </div>
+      )}
     </section>
   );
 }
