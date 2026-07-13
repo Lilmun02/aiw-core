@@ -5,6 +5,7 @@ import Header from "./components/Header.jsx";
 import SearchBar from "./components/SearchBar.jsx";
 import Categories from "./components/Categories.jsx";
 import FeaturedTools from "./components/FeaturedTools.jsx";
+import SubmitTool from "./components/SubmitTool.jsx";
 import Footer from "./components/Footer.jsx";
 
 function App() {
@@ -40,6 +41,8 @@ function App() {
         <div id="featured">
           <FeaturedTools searchTerm={searchTerm} />
         </div>
+
+        <SubmitTool />
       </main>
 
       <Footer />
