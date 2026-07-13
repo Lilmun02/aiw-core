@@ -1,15 +1,25 @@
 function Footer() {
+  function scrollToSection(sectionId) {
+    document
+      .getElementById(sectionId)
+      ?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+  }
+
   return (
     <footer className="border-t border-slate-800 bg-[#050a14]">
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-3 lg:px-12">
         <div>
-          <a
-            href="#home"
+          <button
+            type="button"
+            onClick={() => scrollToSection("home")}
             className="flex items-center gap-3 text-xl font-extrabold text-white"
           >
             <span className="text-2xl">🤖</span>
             <span>AIWCORE</span>
-          </a>
+          </button>
 
           <p className="mt-4 max-w-sm leading-7 text-slate-400">
             Discover, compare, and explore AI tools built to help people create,
@@ -25,21 +35,37 @@ function Footer() {
           <h3 className="font-bold text-white">Explore</h3>
 
           <div className="mt-4 flex flex-col gap-3 text-sm text-slate-400">
-            <a href="#home" className="w-fit transition hover:text-white">
+            <button
+              type="button"
+              onClick={() => scrollToSection("home")}
+              className="w-fit text-left transition hover:text-white"
+            >
               Home
-            </a>
+            </button>
 
-            <a href="#categories" className="w-fit transition hover:text-white">
+            <button
+              type="button"
+              onClick={() => scrollToSection("categories")}
+              className="w-fit text-left transition hover:text-white"
+            >
               Categories
-            </a>
+            </button>
 
-            <a href="#featured" className="w-fit transition hover:text-white">
+            <button
+              type="button"
+              onClick={() => scrollToSection("featured")}
+              className="w-fit text-left transition hover:text-white"
+            >
               Featured Tools
-            </a>
+            </button>
 
-            <a href="#submit-tool" className="w-fit transition hover:text-white">
+            <button
+              type="button"
+              onClick={() => scrollToSection("submit-tool")}
+              className="w-fit text-left transition hover:text-white"
+            >
               Submit a Tool
-            </a>
+            </button>
           </div>
         </div>
 
@@ -47,17 +73,29 @@ function Footer() {
           <h3 className="font-bold text-white">For AI Companies</h3>
 
           <div className="mt-4 flex flex-col gap-3 text-sm text-slate-400">
-            <a href="#submit-tool" className="w-fit transition hover:text-white">
+            <button
+              type="button"
+              onClick={() => scrollToSection("submit-tool")}
+              className="w-fit text-left transition hover:text-white"
+            >
               List Your AI Tool
-            </a>
+            </button>
 
-            <a href="#submit-tool" className="w-fit transition hover:text-white">
+            <button
+              type="button"
+              onClick={() => scrollToSection("submit-tool")}
+              className="w-fit text-left transition hover:text-white"
+            >
               Partner With AIWCORE
-            </a>
+            </button>
 
-            <a href="#submit-tool" className="w-fit transition hover:text-white">
+            <button
+              type="button"
+              onClick={() => scrollToSection("submit-tool")}
+              className="w-fit text-left transition hover:text-white"
+            >
               Featured Listing Inquiry
-            </a>
+            </button>
           </div>
         </div>
       </div>

@@ -1,14 +1,24 @@
- const navLinks = [
+const navLinks = [
   { name: "Home", href: "#home", resetsHome: true },
   { name: "Categories", href: "#categories" },
   { name: "Featured", href: "#featured" },
-  { name: "Submit", href: "#submit-tool" },
 ];
 
 function Navbar({ onLogoClick }) {
   function handleHomeClick(event) {
     event.preventDefault();
     onLogoClick();
+  }
+
+  function handleSubmitClick(event) {
+    event.preventDefault();
+
+    document
+      .getElementById("submit-tool")
+      ?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
   }
 
   return (
@@ -35,14 +45,23 @@ function Navbar({ onLogoClick }) {
               {link.name}
             </a>
           ))}
+
+          <button
+            type="button"
+            onClick={handleSubmitClick}
+            className="text-sm font-medium text-slate-400 transition hover:text-white"
+          >
+            Submit
+          </button>
         </div>
 
-        <a
-          href="#submit-tool"
+        <button
+          type="button"
+          onClick={handleSubmitClick}
           className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
         >
           Submit a Tool
-        </a>
+        </button>
       </div>
     </nav>
   );
