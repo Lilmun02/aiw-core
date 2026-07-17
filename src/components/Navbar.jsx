@@ -1,4 +1,4 @@
-const navLinks = [
+ const navLinks = [
   { name: "Home", href: "#home", resetsHome: true },
   { name: "Categories", href: "#categories" },
   { name: "Featured", href: "#featured" },
@@ -19,6 +19,10 @@ function Navbar({ onLogoClick }) {
         behavior: "smooth",
         block: "start",
       });
+  }
+
+  function handleFeedbackClick() {
+    window.location.href = "/feedback";
   }
 
   return (
@@ -52,6 +56,14 @@ function Navbar({ onLogoClick }) {
             className="text-sm font-medium text-slate-400 transition hover:text-white"
           >
             Submit
+          </button>
+
+          <button
+            type="button"
+            onClick={handleFeedbackClick}
+            className="text-sm font-medium text-slate-400 transition hover:text-white"
+          >
+            Feedback
           </button>
         </div>
 

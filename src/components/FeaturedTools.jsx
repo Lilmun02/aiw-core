@@ -1,6 +1,9 @@
- import ToolCard from "./ToolCard.jsx";
+import { useEffect, useState } from "react";
 
-const featuredTools = [
+import { supabase } from "../lib/supabase.js";
+import ToolCard from "./ToolCard.jsx";
+
+const coreTools = [
   {
     name: "ChatGPT",
     category: "Chatbot",
@@ -38,11 +41,7 @@ const featuredTools = [
     rating: "4.8",
     listingType: "Trending",
     reviewed: true,
-    similarTools: [
-      "Adobe Express",
-      "Microsoft Designer",
-      "Figma AI",
-    ],
+    similarTools: ["Adobe Express", "Microsoft Designer", "Figma AI"],
     keywords: [
       "design",
       "logo",
@@ -65,11 +64,7 @@ const featuredTools = [
     rating: "4.7",
     listingType: "New",
     reviewed: false,
-    similarTools: [
-      "Pika",
-      "Kling",
-      "Veo",
-    ],
+    similarTools: ["Pika", "Kling", "Veo"],
     keywords: [
       "video",
       "youtube",
@@ -83,15 +78,70 @@ const featuredTools = [
 ];
 
 function FeaturedTools({ searchTerm }) {
+  const [databaseTools, setDatabaseTools] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    fetchPublishedTools();
+  }, []);
+
+  async function fetchPublishedTools() {
+    setIsLoading(true);
+    setLoadError("");
+
+    const { data, error } = await supabase
+      .from("tools")
+      .select("*")
+      .eq("status", "published")
+      .order("published_at", { ascending: false });
+
+    if (error) {
+      console.error("Published tools error:", error);
+      setLoadError("Newly approved tools could not be loaded.");
+      setIsLoading(false);
+      return;
+    }
+
+    const formattedTools = (data || []).map((tool) => ({
+      id: tool.id,
+      name: tool.tool_name,
+      category: tool.category || "Other",
+      description: tool.description,
+      icon: tool.featured ? "⭐" : "🚀",
+      website: tool.website_url,
+      rating: "New",
+      listingType:
+        tool.placement === "featured"
+          ? "Featured"
+          : tool.placement === "launch_spotlight"
+            ? "Launch Spotlight"
+            : "New",
+      reviewed: true,
+      similarTools: [],
+      keywords: [
+        tool.tool_name,
+        tool.company_name,
+        tool.category,
+        tool.description,
+        tool.placement,
+      ].filter(Boolean),
+    }));
+
+    setDatabaseTools(formattedTools);
+    setIsLoading(false);
+  }
+
+  const allTools = [...databaseTools, ...coreTools];
   const search = searchTerm.trim().toLowerCase();
 
-  const filteredTools = featuredTools.filter((tool) => {
+  const filteredTools = allTools.filter((tool) => {
     const searchableText = [
       tool.name,
       tool.category,
       tool.description,
       tool.listingType,
-      ...tool.keywords,
+      ...(tool.keywords || []),
     ]
       .join(" ")
       .toLowerCase();
@@ -101,7 +151,7 @@ function FeaturedTools({ searchTerm }) {
 
   return (
     <section className="mt-16">
-      <div className="mb-6 flex items-end justify-between">
+      <div className="mb-6 flex items-end justify-between gap-5">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">
             Recommended
@@ -124,23 +174,34 @@ function FeaturedTools({ searchTerm }) {
               behavior: "smooth",
             })
           }
-          className="text-sm font-semibold text-blue-400 transition hover:text-blue-300"
+          className="shrink-0 text-sm font-semibold text-blue-400 transition hover:text-blue-300"
         >
           Back to Search ↑
         </button>
       </div>
 
-      {filteredTools.length > 0 ? (
+      {loadError && (
+        <div className="mb-6 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-200">
+          {loadError}
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/70 px-6 py-12 text-center">
+          <p className="text-lg font-bold text-white">Loading AI tools...</p>
+        </div>
+      ) : filteredTools.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredTools.map((tool) => (
-            <ToolCard key={tool.name} tool={tool} />
+            <ToolCard
+              key={tool.id ? `database-${tool.id}` : `core-${tool.name}`}
+              tool={tool}
+            />
           ))}
         </div>
       ) : (
         <div className="rounded-3xl border border-slate-800 bg-slate-900/70 px-6 py-12 text-center">
-          <p className="text-xl font-bold text-white">
-            No AI tools found
-          </p>
+          <p className="text-xl font-bold text-white">No AI tools found</p>
 
           <p className="mt-2 text-slate-400">
             Try searching by AI name, feature, category, or keyword.
