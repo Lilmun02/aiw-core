@@ -14,6 +14,9 @@ import Footer from "./components/Footer.jsx";
 
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
+import Signup from "./pages/Signup.jsx";
+import Login from "./pages/Login.jsx";
+import Profile from "./pages/Profile.jsx";
 
 function Home() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,7 +70,7 @@ function FeedbackPage() {
   );
 }
 
-function ProtectedAdmin() {
+function ProtectedRoute({ children, redirectTo = "/login" }) {
   const [session, setSession] = useState(undefined);
 
   useEffect(() => {
@@ -77,11 +80,13 @@ function ProtectedAdmin() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      setSession(currentSession);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   if (session === undefined) {
@@ -93,10 +98,10 @@ function ProtectedAdmin() {
   }
 
   if (!session) {
-    return <Navigate to="/admin-login" replace />;
+    return <Navigate to={redirectTo} replace />;
   }
 
-  return <AdminDashboard />;
+  return children;
 }
 
 function App() {
@@ -104,8 +109,28 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/feedback" element={<FeedbackPage />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/login" element={<Login />} />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="/admin-login" element={<AdminLogin />} />
-      <Route path="/admin" element={<ProtectedAdmin />} />
+
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute redirectTo="/admin-login">
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }
