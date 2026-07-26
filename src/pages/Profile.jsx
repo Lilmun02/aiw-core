@@ -14,6 +14,8 @@ function Profile() {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  const founderEmail = "lilmunofficial18@gmail.com";
+
   useEffect(() => {
     let isMounted = true;
 
@@ -202,11 +204,16 @@ function Profile() {
     );
   }
 
+  const isFounder =
+    user?.email?.toLowerCase() === founderEmail.toLowerCase();
+
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "saved", label: "Saved AI" },
     { id: "tools", label: "My Tools" },
-    { id: "achievements", label: "Achievements" },
+    ...(isFounder
+      ? [{ id: "achievements", label: "Achievements" }]
+      : []),
     { id: "settings", label: "Settings" },
   ];
 
@@ -257,20 +264,22 @@ function Profile() {
                 <div className="pb-1">
                   <div className="mb-3 flex flex-wrap items-center gap-3">
                     <h1 className="text-3xl font-black sm:text-4xl">
-                      {displayName || "AIWCORE Founder"}
+                      {displayName || "AIWCORE Member"}
                     </h1>
 
-                    <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-bold text-amber-300">
-                      👑 Original Founder
-                    </span>
+                    {isFounder && (
+                      <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-bold text-amber-300">
+                        👑 Original Founder
+                      </span>
+                    )}
                   </div>
 
                   <p className="text-lg font-bold text-blue-300">
-                    Founder & CEO of AIWCORE
+                    {isFounder ? "Founder & CEO of AIWCORE" : "AIWCORE Member"}
                   </p>
 
                   <p className="mt-2 text-sm font-medium text-slate-400">
-                    🚀 Founded July 4, 2026
+                    {isFounder ? "🚀 Founded July 4, 2026" : "Exploring AI with AIWCORE"}
                   </p>
                 </div>
               </div>
@@ -321,11 +330,11 @@ function Profile() {
                 <section>
                   <div className="mb-5">
                     <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-400">
-                      Founder Dashboard
+                      {isFounder ? "Founder Dashboard" : "Member Dashboard"}
                     </p>
 
                     <h2 className="mt-2 text-2xl font-black">
-                      Welcome back, {displayName || "Founder"}.
+                      Welcome back, {displayName || "Member"}.
                     </h2>
 
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
@@ -372,11 +381,11 @@ function Profile() {
                       </div>
 
                       <p className="mt-6 text-3xl font-black text-amber-300">
-                        1
+                        {isFounder ? 1 : 0}
                       </p>
 
                       <p className="mt-1 text-sm text-slate-400">
-                        Original Founder
+                        {isFounder ? "Original Founder" : "No badges yet"}
                       </p>
                     </div>
 
@@ -425,25 +434,46 @@ function Profile() {
                     </div>
                   </section>
 
-                  <section className="rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-400/10 to-transparent p-6">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-300/30 bg-amber-400/10 text-3xl">
-                      👑
-                    </div>
+                  {isFounder ? (
+                    <section className="rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-400/10 to-transparent p-6">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-300/30 bg-amber-400/10 text-3xl">
+                        👑
+                      </div>
 
-                    <p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">
-                      Exclusive Badge
-                    </p>
+                      <p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">
+                        Exclusive Badge
+                      </p>
 
-                    <h3 className="mt-2 text-2xl font-black">
-                      Original Founder
-                    </h3>
+                      <h3 className="mt-2 text-2xl font-black">
+                        Original Founder
+                      </h3>
 
-                    <p className="mt-3 text-sm leading-6 text-slate-300">
-                      Awarded exclusively to the creator and Founder of
-                      AIWCORE. This badge cannot be purchased or earned by
-                      another account.
-                    </p>
-                  </section>
+                      <p className="mt-3 text-sm leading-6 text-slate-300">
+                        Awarded exclusively to the creator and Founder of
+                        AIWCORE. This badge cannot be purchased or earned by
+                        another account.
+                      </p>
+                    </section>
+                  ) : (
+                    <section className="rounded-2xl border border-slate-800 bg-[#0a1221] p-6">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-700 bg-slate-800/60 text-3xl">
+                        ✨
+                      </div>
+
+                      <p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+                        Achievements
+                      </p>
+
+                      <h3 className="mt-2 text-2xl font-black">
+                        More badges coming soon
+                      </h3>
+
+                      <p className="mt-3 text-sm leading-6 text-slate-400">
+                        Future AIWCORE activity and milestones will unlock
+                        achievements here.
+                      </p>
+                    </section>
+                  )}
                 </div>
               </div>
             )}
@@ -473,7 +503,7 @@ function Profile() {
               </section>
             )}
 
-            {activeTab === "achievements" && (
+            {activeTab === "achievements" && isFounder && (
               <section>
                 <div className="mb-6">
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">

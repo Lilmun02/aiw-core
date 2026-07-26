@@ -24,7 +24,7 @@ export default defineConfig({
         orientation: "portrait",
 
         start_url: "/",
-
+         id: "/",
         icons: [
           {
             src: "pwa-192x192.png",
