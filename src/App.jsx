@@ -1,22 +1,22 @@
- import { useEffect, useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import { supabase } from "./lib/supabase.js";
 
-import Navbar from "./components/Navbar.jsx";
-import Header from "./components/Header.jsx";
-import SearchBar from "./components/SearchBar.jsx";
 import Categories from "./components/Categories.jsx";
 import FeaturedTools from "./components/FeaturedTools.jsx";
-import SubmitTool from "./components/SubmitTool.jsx";
 import FeedbackForm from "./components/FeedbackForm.jsx";
 import Footer from "./components/Footer.jsx";
+import Header from "./components/Header.jsx";
+import Navbar from "./components/Navbar.jsx";
+import SearchBar from "./components/SearchBar.jsx";
+import SubmitTool from "./components/SubmitTool.jsx";
 
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
-import Signup from "./pages/Signup.jsx";
 import Login from "./pages/Login.jsx";
 import Profile from "./pages/Profile.jsx";
+import Signup from "./pages/Signup.jsx";
 
 function Home() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,6 +60,27 @@ function Home() {
   );
 }
 
+function SubmitToolPage() {
+  function returnHome() {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  return (
+    <div className="min-h-screen bg-[#070d1a] text-white">
+      <Navbar onLogoClick={returnHome} />
+
+      <main className="mx-auto w-full max-w-5xl px-5 pb-20 pt-8 sm:px-8 lg:px-12">
+        <SubmitTool />
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
+
 function FeedbackPage() {
   return (
     <div className="min-h-screen bg-[#070d1a] text-white">
@@ -74,17 +95,30 @@ function ProtectedRoute({ children, redirectTo = "/login" }) {
   const [session, setSession] = useState(undefined);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-    });
+    let isMounted = true;
+
+    async function loadSession() {
+      const {
+        data: { session: currentSession },
+      } = await supabase.auth.getSession();
+
+      if (isMounted) {
+        setSession(currentSession);
+      }
+    }
+
+    loadSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      setSession(currentSession);
+      if (isMounted) {
+        setSession(currentSession);
+      }
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -92,7 +126,11 @@ function ProtectedRoute({ children, redirectTo = "/login" }) {
   if (session === undefined) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#070d1a] text-white">
-        Loading...
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-blue-500" />
+
+          <p className="text-slate-300">Loading AIWCORE...</p>
+        </div>
       </div>
     );
   }
@@ -108,8 +146,11 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+
       <Route path="/feedback" element={<FeedbackPage />} />
+
       <Route path="/signup" element={<Signup />} />
+
       <Route path="/login" element={<Login />} />
 
       <Route
@@ -117,6 +158,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/submit-tool"
+        element={
+          <ProtectedRoute>
+            <SubmitToolPage />
           </ProtectedRoute>
         }
       />
@@ -131,6 +181,8 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

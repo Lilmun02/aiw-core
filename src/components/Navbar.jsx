@@ -1,4 +1,4 @@
- import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase.js";
 
@@ -15,17 +15,39 @@ function Navbar({ onLogoClick }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-    });
+    let isMounted = true;
+
+    async function loadSession() {
+      const {
+        data: { session: currentSession },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (error) {
+        console.error("Session error:", error.message);
+        setSession(null);
+        return;
+      }
+
+      setSession(currentSession);
+    }
+
+    loadSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      setSession(currentSession);
+      if (isMounted) {
+        setSession(currentSession);
+      }
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -55,7 +77,10 @@ function Navbar({ onLogoClick }) {
 
     if (onLogoClick) {
       onLogoClick();
+      return;
     }
+
+    navigate("/");
   }
 
   function handleSectionClick(sectionId, resetsHome = false) {
@@ -66,19 +91,35 @@ function Navbar({ onLogoClick }) {
       return;
     }
 
-    document.getElementById(sectionId)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+    const section = document.getElementById(sectionId);
+
+    if (section) {
+      section.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      return;
+    }
+
+    navigate(`/#${sectionId}`);
   }
 
   function handleSubmitClick() {
     closeMenu();
 
-    document.getElementById("submit-tool")?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+    const submitSection = document.getElementById("submit-tool");
+
+    if (submitSection) {
+      submitSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      return;
+    }
+
+    navigate("/#submit-tool");
   }
 
   function handlePageNavigation(path) {
@@ -99,7 +140,7 @@ function Navbar({ onLogoClick }) {
       return;
     }
 
-    navigate("/");
+    navigate("/", { replace: true });
   }
 
   return (
@@ -136,14 +177,24 @@ function Navbar({ onLogoClick }) {
             {session === undefined ? (
               <div className="h-9 w-20 animate-pulse rounded-lg bg-slate-800" />
             ) : session ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:text-sm"
-              >
-                {isLoggingOut ? "Logging Out..." : "Log Out"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => handlePageNavigation("/profile")}
+                  className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-blue-500 hover:bg-slate-800 hover:text-white sm:px-4 sm:text-sm"
+                >
+                  👤 Profile
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:text-sm"
+                >
+                  {isLoggingOut ? "Logging Out..." : "Log Out"}
+                </button>
+              </>
             ) : (
               <button
                 type="button"
@@ -188,6 +239,7 @@ function Navbar({ onLogoClick }) {
         <div className="flex items-center justify-between border-b border-slate-800 px-6 py-5">
           <div>
             <p className="text-lg font-bold text-white">AIWCORE Menu</p>
+
             <p className="text-sm text-slate-400">
               Find the right AI in minutes.
             </p>
@@ -226,15 +278,26 @@ function Navbar({ onLogoClick }) {
             {session === undefined ? (
               <div className="h-12 w-full animate-pulse rounded-xl bg-slate-800" />
             ) : session ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="flex w-full items-center gap-3 rounded-xl bg-red-600 px-4 py-3 text-left font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <span>🚪</span>
-                <span>{isLoggingOut ? "Logging Out..." : "Log Out"}</span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => handlePageNavigation("/profile")}
+                  className="flex w-full items-center gap-3 rounded-xl bg-blue-600 px-4 py-3 text-left font-semibold text-white transition hover:bg-blue-500"
+                >
+                  <span>👤</span>
+                  <span>My Profile</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="flex w-full items-center gap-3 rounded-xl bg-red-600 px-4 py-3 text-left font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <span>🚪</span>
+                  <span>{isLoggingOut ? "Logging Out..." : "Log Out"}</span>
+                </button>
+              </>
             ) : (
               <>
                 <button
