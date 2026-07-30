@@ -17,6 +17,7 @@ import { supabase } from "./lib/supabase.js";
 
 const GUEST_ACCESS_KEY = "aiwcore_guest_access";
 const AUTH_FLOW_KEY = "aiwcore_auth_flow";
+const APP_STARTED_KEY = "aiwcore_app_started";
 
 const LOADING_MESSAGES = [
   "Preparing AI discovery",
@@ -41,7 +42,14 @@ function AppStartup() {
 
   const [appMode] = useState(() => isInstalledApp());
 
-  const [showLoadingScreen, setShowLoadingScreen] = useState(appMode);
+  const [shouldRunStartup] = useState(
+    () =>
+      appMode &&
+      window.sessionStorage.getItem(APP_STARTED_KEY) !== "true",
+  );
+
+  const [showLoadingScreen, setShowLoadingScreen] =
+    useState(shouldRunStartup);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
 
@@ -50,7 +58,7 @@ function AppStartup() {
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
 
   const [minimumLoadComplete, setMinimumLoadComplete] =
-    useState(!appMode);
+    useState(!shouldRunStartup);
 
   const [sessionChecked, setSessionChecked] = useState(!appMode);
   const [currentSession, setCurrentSession] = useState(null);
@@ -113,11 +121,11 @@ function AppStartup() {
       setLoadingMessageIndex((currentIndex) => {
         return (currentIndex + 1) % LOADING_MESSAGES.length;
       });
-    }, 2400);
+    }, 900);
 
     const minimumLoadTimer = window.setTimeout(() => {
       setMinimumLoadComplete(true);
-    }, 10000);
+    }, 4000);
 
     return () => {
       window.clearTimeout(progressTimer);
@@ -140,15 +148,16 @@ function AppStartup() {
 
     const finishTimer = window.setTimeout(() => {
       setShowLoadingScreen(false);
+      window.sessionStorage.setItem(APP_STARTED_KEY, "true");
 
       const hasGuestAccess =
-        window.localStorage.getItem(GUEST_ACCESS_KEY) === "true";
+        window.sessionStorage.getItem(GUEST_ACCESS_KEY) === "true";
 
-      if (
-        !currentSession &&
-        !hasGuestAccess &&
-        !isAuthenticationPage
-      ) {
+      if (!currentSession && !hasGuestAccess) {
+        if (window.location.pathname !== "/") {
+          navigate("/", { replace: true });
+        }
+
         setShowWelcomeScreen(true);
       }
     }, 300);
@@ -161,6 +170,7 @@ function AppStartup() {
     currentSession,
     isAuthenticationPage,
     minimumLoadComplete,
+    navigate,
     sessionChecked,
     showLoadingScreen,
   ]);
@@ -184,7 +194,7 @@ function AppStartup() {
     window.sessionStorage.removeItem(AUTH_FLOW_KEY);
 
     const hasGuestAccess =
-      window.localStorage.getItem(GUEST_ACCESS_KEY) === "true";
+      window.sessionStorage.getItem(GUEST_ACCESS_KEY) === "true";
 
     if (!currentSession && !hasGuestAccess) {
       setShowWelcomeScreen(true);
@@ -200,6 +210,7 @@ function AppStartup() {
     window.sessionStorage.setItem(AUTH_FLOW_KEY, "true");
 
     setShowWelcomeScreen(false);
+    setShowChangelog(false);
     navigate("/signup");
   }
 
@@ -207,20 +218,22 @@ function AppStartup() {
     window.sessionStorage.setItem(AUTH_FLOW_KEY, "true");
 
     setShowWelcomeScreen(false);
+    setShowChangelog(false);
     navigate("/login");
   }
 
   function handleGuestAccess() {
-    window.localStorage.setItem(GUEST_ACCESS_KEY, "true");
+    window.sessionStorage.setItem(GUEST_ACCESS_KEY, "true");
     window.sessionStorage.removeItem(AUTH_FLOW_KEY);
 
     setShowWelcomeScreen(false);
+    setShowChangelog(false);
     navigate("/", { replace: true });
   }
 
   function handleAuthenticationBack() {
     const hasGuestAccess =
-      window.localStorage.getItem(GUEST_ACCESS_KEY) === "true";
+      window.sessionStorage.getItem(GUEST_ACCESS_KEY) === "true";
 
     window.sessionStorage.removeItem(AUTH_FLOW_KEY);
 
@@ -283,7 +296,7 @@ function AppStartup() {
 
             <div className="mx-auto mt-8 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-slate-800">
               <div
-                className={`h-full rounded-full bg-blue-600 transition-all duration-[9800ms] ease-linear ${
+                className={`h-full rounded-full bg-blue-600 transition-all duration-[3800ms] ease-linear ${
                   progressStarted ? "w-full" : "w-0"
                 }`}
               />
@@ -360,7 +373,7 @@ function AppStartup() {
         </div>
       )}
 
-      {appMode && !showLoadingScreen && (
+      {appMode && showWelcomeScreen && !showLoadingScreen && (
         <div
           className="fixed right-4 z-[10000] flex flex-col items-end gap-3"
           style={{
@@ -401,7 +414,7 @@ function AppStartup() {
                   </p>
 
                   <p className="mt-1 text-sm text-slate-300">
-                    A dedicated app loading experience arrived.
+                    App loading and welcome access were introduced.
                   </p>
                 </div>
 
@@ -411,8 +424,8 @@ function AppStartup() {
                   </p>
 
                   <p className="mt-1 text-sm text-slate-200">
-                    Welcome access, account options, guest browsing,
-                    and smoother navigation are now live.
+                    Startup timing, guest access, back navigation,
+                    and mobile screen fit are now smoother.
                   </p>
                 </div>
 
@@ -422,8 +435,8 @@ function AppStartup() {
                   </p>
 
                   <p className="mt-1 text-sm text-slate-300">
-                    Early supporters will soon have a new way to become
-                    part of the AIWCORE journey.
+                    Something for the people who have been here from
+                    the beginning is getting closer.
                   </p>
                 </div>
               </div>
