@@ -1,12 +1,29 @@
-import { StrictMode, useEffect, useState } from "react";
+ import {
+  StrictMode,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 
 import "./index.css";
 import App from "./App.jsx";
 import { supabase } from "./lib/supabase.js";
 
 const GUEST_ACCESS_KEY = "aiwcore_guest_access";
+const AUTH_FLOW_KEY = "aiwcore_auth_flow";
+
+const LOADING_MESSAGES = [
+  "Preparing AI discovery",
+  "Organizing featured tools",
+  "Checking your access",
+  "Almost ready",
+];
 
 function isInstalledApp() {
   const isStandaloneDisplay = window.matchMedia(
@@ -20,20 +37,27 @@ function isInstalledApp() {
 
 function AppStartup() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [appMode] = useState(() => isInstalledApp());
 
   const [showLoadingScreen, setShowLoadingScreen] = useState(appMode);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
+  const [showChangelog, setShowChangelog] = useState(false);
 
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [progressStarted, setProgressStarted] = useState(false);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
 
   const [minimumLoadComplete, setMinimumLoadComplete] =
     useState(!appMode);
 
   const [sessionChecked, setSessionChecked] = useState(!appMode);
   const [currentSession, setCurrentSession] = useState(null);
+
+  const isAuthenticationPage =
+    location.pathname === "/login" ||
+    location.pathname === "/signup";
 
   useEffect(() => {
     if (!appMode) {
@@ -62,13 +86,22 @@ function AppStartup() {
 
     checkSession();
 
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) {
+        setCurrentSession(session ?? null);
+      }
+    });
+
     return () => {
       isMounted = false;
+      subscription.unsubscribe();
     };
   }, [appMode]);
 
   useEffect(() => {
-    if (!appMode) {
+    if (!appMode || !showLoadingScreen) {
       return undefined;
     }
 
@@ -76,15 +109,22 @@ function AppStartup() {
       setProgressStarted(true);
     }, 100);
 
+    const messageTimer = window.setInterval(() => {
+      setLoadingMessageIndex((currentIndex) => {
+        return (currentIndex + 1) % LOADING_MESSAGES.length;
+      });
+    }, 2400);
+
     const minimumLoadTimer = window.setTimeout(() => {
       setMinimumLoadComplete(true);
-    }, 1650);
+    }, 10000);
 
     return () => {
       window.clearTimeout(progressTimer);
+      window.clearInterval(messageTimer);
       window.clearTimeout(minimumLoadTimer);
     };
-  }, [appMode]);
+  }, [appMode, showLoadingScreen]);
 
   useEffect(() => {
     if (
@@ -100,10 +140,6 @@ function AppStartup() {
 
     const finishTimer = window.setTimeout(() => {
       setShowLoadingScreen(false);
-
-      const currentPath = window.location.pathname;
-      const isAuthenticationPage =
-        currentPath === "/login" || currentPath === "/signup";
 
       const hasGuestAccess =
         window.localStorage.getItem(GUEST_ACCESS_KEY) === "true";
@@ -123,31 +159,98 @@ function AppStartup() {
   }, [
     appMode,
     currentSession,
+    isAuthenticationPage,
     minimumLoadComplete,
     sessionChecked,
     showLoadingScreen,
   ]);
 
+  useLayoutEffect(() => {
+    if (
+      !appMode ||
+      showLoadingScreen ||
+      location.pathname !== "/"
+    ) {
+      return;
+    }
+
+    const returningFromAuthentication =
+      window.sessionStorage.getItem(AUTH_FLOW_KEY) === "true";
+
+    if (!returningFromAuthentication) {
+      return;
+    }
+
+    window.sessionStorage.removeItem(AUTH_FLOW_KEY);
+
+    const hasGuestAccess =
+      window.localStorage.getItem(GUEST_ACCESS_KEY) === "true";
+
+    if (!currentSession && !hasGuestAccess) {
+      setShowWelcomeScreen(true);
+    }
+  }, [
+    appMode,
+    currentSession,
+    location.pathname,
+    showLoadingScreen,
+  ]);
+
   function handleCreateAccount() {
+    window.sessionStorage.setItem(AUTH_FLOW_KEY, "true");
+
     setShowWelcomeScreen(false);
     navigate("/signup");
   }
 
   function handleLogin() {
+    window.sessionStorage.setItem(AUTH_FLOW_KEY, "true");
+
     setShowWelcomeScreen(false);
     navigate("/login");
   }
 
   function handleGuestAccess() {
     window.localStorage.setItem(GUEST_ACCESS_KEY, "true");
+    window.sessionStorage.removeItem(AUTH_FLOW_KEY);
 
     setShowWelcomeScreen(false);
     navigate("/", { replace: true });
   }
 
+  function handleAuthenticationBack() {
+    const hasGuestAccess =
+      window.localStorage.getItem(GUEST_ACCESS_KEY) === "true";
+
+    window.sessionStorage.removeItem(AUTH_FLOW_KEY);
+
+    navigate("/", { replace: true });
+
+    if (!currentSession && !hasGuestAccess) {
+      setShowWelcomeScreen(true);
+    }
+  }
+
   return (
     <>
       <App />
+
+      {appMode &&
+        isAuthenticationPage &&
+        !showLoadingScreen && (
+          <button
+            type="button"
+            onClick={handleAuthenticationBack}
+            aria-label="Go back to the AIWCORE welcome screen"
+            className="fixed left-4 top-4 z-[9997] inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/95 px-4 py-2.5 text-sm font-bold text-white shadow-xl backdrop-blur transition hover:border-blue-500 hover:bg-slate-800 active:scale-[0.98]"
+            style={{
+              marginTop: "env(safe-area-inset-top)",
+            }}
+          >
+            <span aria-hidden="true">←</span>
+            <span>Back</span>
+          </button>
+        )}
 
       {showLoadingScreen && (
         <div
@@ -180,14 +283,14 @@ function AppStartup() {
 
             <div className="mx-auto mt-8 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-slate-800">
               <div
-                className={`h-full rounded-full bg-blue-600 transition-all duration-[1500ms] ease-out ${
+                className={`h-full rounded-full bg-blue-600 transition-all duration-[9800ms] ease-linear ${
                   progressStarted ? "w-full" : "w-0"
                 }`}
               />
             </div>
 
-            <p className="mt-4 animate-pulse text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-              Loading AI discovery
+            <p className="mt-4 min-h-5 animate-pulse text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+              {LOADING_MESSAGES[loadingMessageIndex]}
             </p>
           </div>
         </div>
@@ -254,6 +357,88 @@ function AppStartup() {
               Ambition • Integrity • Willingness
             </p>
           </div>
+        </div>
+      )}
+
+      {appMode && !showLoadingScreen && (
+        <div
+          className="fixed right-4 z-[10000] flex flex-col items-end gap-3"
+          style={{
+            bottom:
+              "calc(1rem + env(safe-area-inset-bottom))",
+          }}
+        >
+          {showChangelog && (
+            <section
+              aria-label="AIWCORE updates"
+              className="w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-700 bg-slate-900/95 p-4 text-white shadow-2xl backdrop-blur"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-400">
+                    AIWCORE Updates
+                  </p>
+
+                  <h2 className="mt-1 text-lg font-bold">
+                    What’s new
+                  </h2>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowChangelog(false)}
+                  aria-label="Close update notes"
+                  className="rounded-lg px-2 py-1 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                <div className="rounded-xl bg-slate-950/70 p-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                    Previous
+                  </p>
+
+                  <p className="mt-1 text-sm text-slate-300">
+                    A dedicated app loading experience arrived.
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-blue-400">
+                    New
+                  </p>
+
+                  <p className="mt-1 text-sm text-slate-200">
+                    Welcome access, account options, guest browsing,
+                    and smoother navigation are now live.
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-slate-950/70 p-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                    Coming next
+                  </p>
+
+                  <p className="mt-1 text-sm text-slate-300">
+                    Early supporters will soon have a new way to become
+                    part of the AIWCORE journey.
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setShowChangelog((current) => !current)}
+            aria-expanded={showChangelog}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/95 px-4 py-2.5 text-sm font-bold text-white shadow-xl backdrop-blur transition hover:border-blue-500 hover:bg-slate-800 active:scale-[0.98]"
+          >
+            <span className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
+            <span>What’s New</span>
+          </button>
         </div>
       )}
     </>
