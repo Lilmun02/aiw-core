@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase.js";
 
@@ -8,11 +8,34 @@ const menuLinks = [
   { name: "Featured", icon: "⭐", sectionId: "featured" },
 ];
 
+function checkStandaloneMode() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true
+  );
+}
+
 function Navbar({ onLogoClick }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [session, setSession] = useState(undefined);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(checkStandaloneMode);
+
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const displayModeQuery = window.matchMedia("(display-mode: standalone)");
+
+    function handleDisplayModeChange() {
+      setIsStandalone(checkStandaloneMode());
+    }
+
+    displayModeQuery.addEventListener?.("change", handleDisplayModeChange);
+
+    return () => {
+      displayModeQuery.removeEventListener?.("change", handleDisplayModeChange);
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -158,51 +181,55 @@ function Navbar({ onLogoClick }) {
           </button>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-3">
-            <button
-              type="button"
-              onClick={handleHomeClick}
-              className="rounded-lg px-2 py-2 text-xs font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white sm:px-3 sm:text-sm"
-            >
-              Home
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSectionClick("categories")}
-              className="rounded-lg px-2 py-2 text-xs font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white sm:px-3 sm:text-sm"
-            >
-              Categories
-            </button>
-
-            {session === undefined ? (
-              <div className="h-9 w-20 animate-pulse rounded-lg bg-slate-800" />
-            ) : session ? (
+            {!isStandalone && (
               <>
                 <button
                   type="button"
-                  onClick={() => handlePageNavigation("/profile")}
-                  className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-blue-500 hover:bg-slate-800 hover:text-white sm:px-4 sm:text-sm"
+                  onClick={handleHomeClick}
+                  className="rounded-lg px-2 py-2 text-xs font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white sm:px-3 sm:text-sm"
                 >
-                  👤 Profile
+                  Home
                 </button>
 
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:text-sm"
+                  onClick={() => handleSectionClick("categories")}
+                  className="rounded-lg px-2 py-2 text-xs font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white sm:px-3 sm:text-sm"
                 >
-                  {isLoggingOut ? "Logging Out..." : "Log Out"}
+                  Categories
                 </button>
+
+                {session === undefined ? (
+                  <div className="h-9 w-20 animate-pulse rounded-lg bg-slate-800" />
+                ) : session ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handlePageNavigation("/profile")}
+                      className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-blue-500 hover:bg-slate-800 hover:text-white sm:px-4 sm:text-sm"
+                    >
+                      👤 Profile
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:text-sm"
+                    >
+                      {isLoggingOut ? "Logging Out..." : "Log Out"}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handlePageNavigation("/login")}
+                    className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-500 sm:px-4 sm:text-sm"
+                  >
+                    Log In
+                  </button>
+                )}
               </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => handlePageNavigation("/login")}
-                className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-500 sm:px-4 sm:text-sm"
-              >
-                Log In
-              </button>
             )}
 
             <button
@@ -239,7 +266,6 @@ function Navbar({ onLogoClick }) {
         <div className="flex items-center justify-between border-b border-slate-800 px-6 py-5">
           <div>
             <p className="text-lg font-bold text-white">AIWCORE Menu</p>
-
             <p className="text-sm text-slate-400">
               Find the right AI in minutes.
             </p>
