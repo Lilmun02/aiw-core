@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+ import { useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { supabase } from "./lib/supabase.js";
@@ -14,6 +14,7 @@ import SubmitTool from "./components/SubmitTool.jsx";
 
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
+import FounderSupport from "./pages/FounderSupport.jsx";
 import Login from "./pages/Login.jsx";
 import Profile from "./pages/Profile.jsx";
 import Signup from "./pages/Signup.jsx";
@@ -158,6 +159,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/founder-support"
+        element={
+          <ProtectedRoute>
+            <FounderSupport />
           </ProtectedRoute>
         }
       />

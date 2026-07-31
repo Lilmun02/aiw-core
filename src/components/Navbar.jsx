@@ -6,6 +6,7 @@ const menuLinks = [
   { name: "Home", icon: "🏠", sectionId: "home", resetsHome: true },
   { name: "Categories", icon: "📂", sectionId: "categories" },
   { name: "Featured", icon: "⭐", sectionId: "featured" },
+  { name: "Founder Support", icon: "🚀", path: "/founder-support" },
 ];
 
 function checkStandaloneMode() {
@@ -150,6 +151,15 @@ function Navbar({ onLogoClick }) {
     navigate(path);
   }
 
+  function handleMenuLinkClick(link) {
+    if (link.path) {
+      handlePageNavigation(link.path);
+      return;
+    }
+
+    handleSectionClick(link.sectionId, link.resetsHome);
+  }
+
   async function handleLogout() {
     setIsLoggingOut(true);
 
@@ -266,6 +276,7 @@ function Navbar({ onLogoClick }) {
         <div className="flex items-center justify-between border-b border-slate-800 px-6 py-5">
           <div>
             <p className="text-lg font-bold text-white">AIWCORE Menu</p>
+
             <p className="text-sm text-slate-400">
               Find the right AI in minutes.
             </p>
@@ -287,9 +298,7 @@ function Navbar({ onLogoClick }) {
               <button
                 key={link.name}
                 type="button"
-                onClick={() =>
-                  handleSectionClick(link.sectionId, link.resetsHome)
-                }
+                onClick={() => handleMenuLinkClick(link)}
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
               >
                 <span>{link.icon}</span>
