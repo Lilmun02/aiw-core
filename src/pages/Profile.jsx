@@ -1,4 +1,4 @@
- import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import AchievementsTab from "../components/profile/AchievementsTab";
@@ -10,11 +10,19 @@ import SettingsTab from "../components/profile/SettingsTab";
 
 import { supabase } from "../lib/supabase.js";
 
+const emptyStreak = {
+  current_streak: 0,
+  longest_streak: 0,
+  total_days: 0,
+  last_active_date: null,
+};
+
 function Profile() {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
   const [displayName, setDisplayName] = useState("");
+  const [streak, setStreak] = useState(emptyStreak);
   const [activeTab, setActiveTab] = useState("overview");
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
@@ -62,26 +70,63 @@ function Profile() {
         currentUser.email?.split("@")[0] ||
         "AIWCORE Member";
 
-      const { data: existingProfile, error: profileError } = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("id", currentUser.id)
-        .maybeSingle();
+      const { error: checkInError } = await supabase.rpc(
+        "check_in_user_streak",
+      );
+
+      if (checkInError) {
+        console.error(
+          "Profile streak check-in failed:",
+          checkInError.message,
+        );
+      }
+
+      const [profileResult, streakResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", currentUser.id)
+          .maybeSingle(),
+
+        supabase
+          .from("user_streaks")
+          .select(
+            "current_streak, longest_streak, total_days, last_active_date",
+          )
+          .eq("user_id", currentUser.id)
+          .maybeSingle(),
+      ]);
 
       if (!isMounted) {
         return;
       }
 
-      if (profileError) {
+      if (streakResult.error) {
+        console.error(
+          "Unable to load streak information:",
+          streakResult.error.message,
+        );
+      } else if (streakResult.data) {
+        setStreak({
+          current_streak: streakResult.data.current_streak || 0,
+          longest_streak: streakResult.data.longest_streak || 0,
+          total_days: streakResult.data.total_days || 0,
+          last_active_date: streakResult.data.last_active_date || null,
+        });
+      }
+
+      if (profileResult.error) {
         setIsError(true);
-        setMessage(profileError.message);
+        setMessage(profileResult.error.message);
         setDisplayName(defaultDisplayName);
         setIsLoading(false);
         return;
       }
 
-      if (existingProfile) {
-        setDisplayName(existingProfile.display_name || defaultDisplayName);
+      if (profileResult.data) {
+        setDisplayName(
+          profileResult.data.display_name || defaultDisplayName,
+        );
         setIsLoading(false);
         return;
       }
@@ -262,6 +307,7 @@ function Profile() {
           <OverviewTab
             displayName={displayName}
             isFounder={isFounder}
+            streak={streak}
           />
         );
     }

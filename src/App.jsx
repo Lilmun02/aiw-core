@@ -144,6 +144,69 @@ function ProtectedRoute({ children, redirectTo = "/login" }) {
 }
 
 function App() {
+  useEffect(() => {
+    let isMounted = true;
+    const checkedUsers = new Set();
+
+    async function checkInUser(currentSession) {
+      const userId = currentSession?.user?.id;
+
+      if (!userId || checkedUsers.has(userId)) {
+        return;
+      }
+
+      checkedUsers.add(userId);
+
+      const { error } = await supabase.rpc("check_in_user_streak");
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (error) {
+        checkedUsers.delete(userId);
+        console.error("Automatic streak check-in failed:", error.message);
+      }
+    }
+
+    async function loadCurrentSession() {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (error) {
+        console.error("Unable to load session for streak:", error.message);
+        return;
+      }
+
+      if (session) {
+        checkInUser(session);
+      }
+    }
+
+    loadCurrentSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      if (!isMounted || !currentSession) {
+        return;
+      }
+
+      checkInUser(currentSession);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
   return (
     <Routes>
       <Route path="/" element={<Home />} />

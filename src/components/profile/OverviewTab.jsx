@@ -1,4 +1,66 @@
- function OverviewTab({ displayName, isFounder }) {
+ function getStreakBadge(currentStreak) {
+  if (currentStreak >= 30) {
+    return {
+      name: "Core Member",
+      icon: "👑",
+      description:
+        "Maintained an active AIWCORE streak for at least 30 consecutive days.",
+      nextGoal: null,
+    };
+  }
+
+  if (currentStreak >= 14) {
+    return {
+      name: "Dedicated User",
+      icon: "💎",
+      description:
+        "Maintained an active AIWCORE streak for at least 14 consecutive days.",
+      nextGoal: 30,
+    };
+  }
+
+  if (currentStreak >= 7) {
+    return {
+      name: "Consistent User",
+      icon: "⚡",
+      description:
+        "Maintained an active AIWCORE streak for at least 7 consecutive days.",
+      nextGoal: 14,
+    };
+  }
+
+  if (currentStreak >= 3) {
+    return {
+      name: "Active User",
+      icon: "🔥",
+      description:
+        "Maintained an active AIWCORE streak for at least 3 consecutive days.",
+      nextGoal: 7,
+    };
+  }
+
+  return {
+    name: null,
+    icon: "✨",
+    description:
+      "Return to AIWCORE on consecutive days to earn your first activity badge.",
+    nextGoal: 3,
+  };
+}
+
+function OverviewTab({ displayName, isFounder, streak }) {
+  const currentStreak = streak?.current_streak || 0;
+  const longestStreak = streak?.longest_streak || 0;
+  const totalDays = streak?.total_days || 0;
+
+  const streakBadge = getStreakBadge(currentStreak);
+  const earnedStreakBadge = Boolean(streakBadge.name);
+  const badgeCount = (isFounder ? 1 : 0) + (earnedStreakBadge ? 1 : 0);
+
+  const daysUntilNextBadge = streakBadge.nextGoal
+    ? Math.max(streakBadge.nextGoal - currentStreak, 0)
+    : 0;
+
   return (
     <div className="space-y-8">
       <section>
@@ -21,6 +83,7 @@
           <div className="rounded-2xl border border-slate-800 bg-[#0a1221] p-5">
             <div className="flex items-center justify-between">
               <span className="text-2xl">⭐</span>
+
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Saved
               </span>
@@ -36,6 +99,7 @@
           <div className="rounded-2xl border border-slate-800 bg-[#0a1221] p-5">
             <div className="flex items-center justify-between">
               <span className="text-2xl">📤</span>
+
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Submitted
               </span>
@@ -50,33 +114,43 @@
 
           <div className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-5">
             <div className="flex items-center justify-between">
-              <span className="text-2xl">👑</span>
+              <span className="text-2xl">
+                {earnedStreakBadge ? streakBadge.icon : "🏅"}
+              </span>
+
               <span className="text-xs font-bold uppercase tracking-wider text-amber-400/70">
                 Badges
               </span>
             </div>
 
             <p className="mt-6 text-3xl font-black text-amber-300">
-              {isFounder ? 1 : 0}
+              {badgeCount}
             </p>
 
             <p className="mt-1 text-sm text-slate-400">
-              {isFounder ? "Original Founder" : "No badges yet"}
+              {badgeCount === 0
+                ? "No badges yet"
+                : badgeCount === 1
+                  ? "Badge earned"
+                  : "Badges earned"}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-[#0a1221] p-5">
+          <div className="rounded-2xl border border-orange-400/20 bg-orange-400/5 p-5">
             <div className="flex items-center justify-between">
-              <span className="text-2xl">🚀</span>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Since
+              <span className="text-2xl">🔥</span>
+
+              <span className="text-xs font-bold uppercase tracking-wider text-orange-300/70">
+                Current Streak
               </span>
             </div>
 
-            <p className="mt-6 text-xl font-black">July 4, 2026</p>
+            <p className="mt-6 text-3xl font-black text-orange-300">
+              {currentStreak}
+            </p>
 
             <p className="mt-1 text-sm text-slate-400">
-              AIWCORE founded
+              {currentStreak === 1 ? "Consecutive day" : "Consecutive days"}
             </p>
           </div>
         </div>
@@ -87,67 +161,143 @@
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-                Recent Activity
+                Daily Activity
               </p>
 
               <h3 className="mt-2 text-xl font-black">
-                Your AIWCORE Journey
+                Your AIWCORE Streak
               </h3>
             </div>
 
-            <span className="text-2xl">🔥</span>
+            <span className="text-3xl">🔥</span>
           </div>
 
-          <div className="mt-8 rounded-2xl border border-dashed border-slate-700 px-6 py-10 text-center">
-            <p className="text-lg font-bold text-slate-200">
-              No activity yet
-            </p>
+          <div className="mt-7 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl border border-slate-800 bg-[#070d1a] p-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Current
+              </p>
 
-            <p className="mt-2 text-sm text-slate-500">
-              Saved tools, submissions, reviews, and achievements will appear
-              here as AIWCORE grows.
-            </p>
+              <p className="mt-3 text-3xl font-black text-orange-300">
+                {currentStreak}
+              </p>
+
+              <p className="mt-1 text-sm text-slate-400">
+                Day streak
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-800 bg-[#070d1a] p-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Longest
+              </p>
+
+              <p className="mt-3 text-3xl font-black">
+                {longestStreak}
+              </p>
+
+              <p className="mt-1 text-sm text-slate-400">
+                Best streak
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-800 bg-[#070d1a] p-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Total Active
+              </p>
+
+              <p className="mt-3 text-3xl font-black">
+                {totalDays}
+              </p>
+
+              <p className="mt-1 text-sm text-slate-400">
+                Active days
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-slate-800 bg-[#070d1a] p-5">
+            {streakBadge.nextGoal ? (
+              <>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="font-bold text-slate-200">
+                    Next badge at {streakBadge.nextGoal} days
+                  </p>
+
+                  <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-bold text-slate-300">
+                    {daysUntilNextBadge}{" "}
+                    {daysUntilNextBadge === 1 ? "day" : "days"} remaining
+                  </span>
+                </div>
+
+                <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-800">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-300 transition-all duration-500"
+                    style={{
+                      width: `${Math.min(
+                        (currentStreak / streakBadge.nextGoal) * 100,
+                        100,
+                      )}%`,
+                    }}
+                  />
+                </div>
+
+                <p className="mt-3 text-sm text-slate-500">
+                  Return on consecutive days to keep your streak active.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-bold text-amber-300">
+                  Maximum activity badge reached
+                </p>
+
+                <p className="mt-2 text-sm text-slate-400">
+                  Keep returning to extend your streak and set a new personal
+                  record.
+                </p>
+              </>
+            )}
           </div>
         </section>
 
-        {isFounder ? (
-          <section className="rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-400/10 to-transparent p-6">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-300/30 bg-amber-400/10 text-3xl">
-              👑
+        <section className="rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-400/10 to-transparent p-6">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-300/30 bg-amber-400/10 text-3xl">
+            {earnedStreakBadge ? streakBadge.icon : "✨"}
+          </div>
+
+          <p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">
+            Activity Badge
+          </p>
+
+          <h3 className="mt-2 text-2xl font-black">
+            {earnedStreakBadge
+              ? streakBadge.name
+              : "Your First Badge Awaits"}
+          </h3>
+
+          <p className="mt-3 text-sm leading-6 text-slate-300">
+            {streakBadge.description}
+          </p>
+
+          {isFounder && (
+            <div className="mt-6 border-t border-amber-300/20 pt-6">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">👑</span>
+
+                <div>
+                  <p className="font-black text-amber-200">
+                    Original Founder
+                  </p>
+
+                  <p className="mt-1 text-sm leading-6 text-slate-400">
+                    Awarded exclusively to the creator and Founder of AIWCORE.
+                  </p>
+                </div>
+              </div>
             </div>
-
-            <p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">
-              Exclusive Badge
-            </p>
-
-            <h3 className="mt-2 text-2xl font-black">
-              Original Founder
-            </h3>
-
-            <p className="mt-3 text-sm leading-6 text-slate-300">
-              Awarded exclusively to the creator and Founder of AIWCORE.
-            </p>
-          </section>
-        ) : (
-          <section className="rounded-2xl border border-slate-800 bg-[#0a1221] p-6">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-700 bg-slate-800/60 text-3xl">
-              ✨
-            </div>
-
-            <p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-              Achievements
-            </p>
-
-            <h3 className="mt-2 text-2xl font-black">
-              More badges coming soon
-            </h3>
-
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              Future AIWCORE activity and milestones will unlock achievements
-              here.
-            </p>
-          </section>
-        )}
+          )}
+        </section>
       </div>
     </div>
   );
