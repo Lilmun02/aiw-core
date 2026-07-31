@@ -24,3 +24,47 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* Installed AIWCORE app only */
+@media (display-mode: standalone) {
+  html {
+    width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+    scroll-padding-top: calc(90px + env(safe-area-inset-top));
+  }
+
+  body {
+    width: 100%;
+    min-width: 0;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100dvh;
+    overflow-x: clip;
+  }
+
+  nav {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  main,
+  section,
+  header,
+  footer {
+    max-width: 100%;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font-size: 16px;
+  }
+}
