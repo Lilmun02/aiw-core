@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import AchievementsTab from "../components/profile/AchievementsTab";
@@ -8,6 +8,10 @@ import ProfileHeader from "../components/profile/ProfileHeader";
 import SavedTab from "../components/profile/SavedTab";
 import SettingsTab from "../components/profile/SettingsTab";
 
+import {
+  removeAvatar,
+  uploadAvatar,
+} from "../lib/avatarStorage.js";
 import { supabase } from "../lib/supabase.js";
 
 const emptyStreak = {
@@ -22,6 +26,7 @@ function Profile() {
 
   const [user, setUser] = useState(null);
   const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const [streak, setStreak] = useState(emptyStreak);
   const [activeTab, setActiveTab] = useState("overview");
   const [message, setMessage] = useState("");
@@ -29,6 +34,8 @@ function Profile() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
 
   const founderEmail = "lilmunofficial18@gmail.com";
 
@@ -84,7 +91,7 @@ function Profile() {
       const [profileResult, streakResult] = await Promise.all([
         supabase
           .from("profiles")
-          .select("display_name")
+          .select("display_name, avatar_url")
           .eq("id", currentUser.id)
           .maybeSingle(),
 
@@ -119,6 +126,7 @@ function Profile() {
         setIsError(true);
         setMessage(profileResult.error.message);
         setDisplayName(defaultDisplayName);
+        setAvatarUrl(null);
         setIsLoading(false);
         return;
       }
@@ -127,6 +135,7 @@ function Profile() {
         setDisplayName(
           profileResult.data.display_name || defaultDisplayName,
         );
+        setAvatarUrl(profileResult.data.avatar_url || null);
         setIsLoading(false);
         return;
       }
@@ -137,12 +146,13 @@ function Profile() {
           {
             id: currentUser.id,
             display_name: defaultDisplayName,
+            avatar_url: null,
           },
           {
             onConflict: "id",
           },
         )
-        .select("display_name")
+        .select("display_name, avatar_url")
         .single();
 
       if (!isMounted) {
@@ -153,11 +163,15 @@ function Profile() {
         setIsError(true);
         setMessage(createError.message);
         setDisplayName(defaultDisplayName);
+        setAvatarUrl(null);
         setIsLoading(false);
         return;
       }
 
-      setDisplayName(createdProfile?.display_name || defaultDisplayName);
+      setDisplayName(
+        createdProfile?.display_name || defaultDisplayName,
+      );
+      setAvatarUrl(createdProfile?.avatar_url || null);
       setIsLoading(false);
     }
 
@@ -180,6 +194,74 @@ function Profile() {
       subscription.unsubscribe();
     };
   }, [navigate]);
+
+  async function handleUploadAvatar(file) {
+    if (!user || isUploadingAvatar || isRemovingAvatar) {
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    setMessage("");
+    setIsError(false);
+
+    try {
+      const uploadedAvatarUrl = await uploadAvatar({
+        userId: user.id,
+        file,
+      });
+
+      setAvatarUrl(uploadedAvatarUrl);
+      setMessage("Profile picture updated successfully.");
+    } catch (error) {
+      setIsError(true);
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "AIWCORE could not upload your profile picture.",
+      );
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  }
+
+  async function handleRemoveAvatar() {
+    if (
+      !user ||
+      !avatarUrl ||
+      isUploadingAvatar ||
+      isRemovingAvatar
+    ) {
+      return;
+    }
+
+    const shouldRemove = window.confirm(
+      "Remove your current profile picture?",
+    );
+
+    if (!shouldRemove) {
+      return;
+    }
+
+    setIsRemovingAvatar(true);
+    setMessage("");
+    setIsError(false);
+
+    try {
+      await removeAvatar(user.id);
+
+      setAvatarUrl(null);
+      setMessage("Profile picture removed successfully.");
+    } catch (error) {
+      setIsError(true);
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "AIWCORE could not remove your profile picture.",
+      );
+    } finally {
+      setIsRemovingAvatar(false);
+    }
+  }
 
   async function handleSave(event) {
     event.preventDefault();
@@ -319,7 +401,9 @@ function Profile() {
         <div className="text-center">
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-blue-500" />
 
-          <p className="text-slate-300">Loading My AIWCORE...</p>
+          <p className="text-slate-300">
+            Loading My AIWCORE...
+          </p>
         </div>
       </main>
     );
@@ -346,10 +430,28 @@ function Profile() {
           </button>
         </div>
 
+        {message && activeTab !== "settings" && (
+          <div
+            role={isError ? "alert" : "status"}
+            className={`mb-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${
+              isError
+                ? "border-red-500/40 bg-red-500/10 text-red-200"
+                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+            }`}
+          >
+            {message}
+          </div>
+        )}
+
         <section className="overflow-hidden rounded-3xl border border-slate-800 bg-[#0d1526] shadow-2xl">
           <ProfileHeader
+            avatarUrl={avatarUrl}
             displayName={displayName}
             isFounder={isFounder}
+            isUploadingAvatar={isUploadingAvatar}
+            isRemovingAvatar={isRemovingAvatar}
+            onUploadAvatar={handleUploadAvatar}
+            onRemoveAvatar={handleRemoveAvatar}
             onEditProfile={() => changeTab("settings")}
             onLogout={handleLogout}
             isLoggingOut={isLoggingOut}

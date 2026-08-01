@@ -1,9 +1,24 @@
- function AvatarCard({ displayName, isFounder }) {
+ import AvatarUploader from "./AvatarUploader";
+
+function AvatarCard({
+  avatarUrl,
+  displayName,
+  isFounder = false,
+  isUploadingAvatar = false,
+  isRemovingAvatar = false,
+  onUploadAvatar,
+  onRemoveAvatar,
+}) {
   return (
     <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
-      <div className="flex h-32 w-32 shrink-0 items-center justify-center rounded-3xl border-4 border-[#0d1526] bg-[#111c31] text-5xl shadow-xl">
-        👤
-      </div>
+      <AvatarUploader
+        avatarUrl={avatarUrl}
+        displayName={displayName}
+        isUploading={isUploadingAvatar}
+        isRemoving={isRemovingAvatar}
+        onUpload={onUploadAvatar}
+        onRemove={onRemoveAvatar}
+      />
 
       <div className="pb-1">
         <div className="mb-3 flex flex-wrap items-center gap-3">

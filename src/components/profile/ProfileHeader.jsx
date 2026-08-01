@@ -1,8 +1,13 @@
 import AvatarCard from "./AvatarCard";
 
 function ProfileHeader({
+  avatarUrl,
   displayName,
   isFounder = false,
+  isUploadingAvatar = false,
+  isRemovingAvatar = false,
+  onUploadAvatar,
+  onRemoveAvatar,
   onEditProfile,
   onLogout,
   isLoggingOut = false,
@@ -28,8 +33,13 @@ function ProfileHeader({
       <div className="relative px-6 pb-8 sm:px-10">
         <div className="-mt-16 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <AvatarCard
+            avatarUrl={avatarUrl}
             displayName={displayName}
             isFounder={isFounder}
+            isUploadingAvatar={isUploadingAvatar}
+            isRemovingAvatar={isRemovingAvatar}
+            onUploadAvatar={onUploadAvatar}
+            onRemoveAvatar={onRemoveAvatar}
           />
 
           <div className="flex flex-wrap gap-3">
