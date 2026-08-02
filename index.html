@@ -4,7 +4,44 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ai-app-store</title>
+    <title>AIWCORE</title>
+    <script>
+      (function () {
+        function showStartupError(message) {
+          window.setTimeout(function () {
+            var root = document.getElementById("root");
+            if (!root || root.childElementCount > 0) return;
+
+            root.innerHTML =
+              '<main style="min-height:100vh;background:#070d1a;color:white;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,-apple-system,sans-serif">' +
+              '<section style="width:100%;max-width:680px;border:1px solid rgba(239,68,68,.35);background:#0f172a;border-radius:20px;padding:24px">' +
+              '<p style="margin:0 0 8px;color:#fca5a5;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:12px">AIWCORE startup error</p>' +
+              '<h1 style="margin:0 0 14px;font-size:24px">The app could not start</h1>' +
+              '<pre style="white-space:pre-wrap;overflow-wrap:anywhere;margin:0;color:#fecaca;font-size:14px;line-height:1.6">' +
+              String(message).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+              '</pre>' +
+              '<p style="margin:18px 0 0;color:#94a3b8;font-size:13px">Take a screenshot of this message so the issue can be fixed precisely.</p>' +
+              '</section></main>';
+          }, 0);
+        }
+
+        window.addEventListener("error", function (event) {
+          showStartupError(event.error && event.error.stack ? event.error.stack : event.message);
+        });
+
+        window.addEventListener("unhandledrejection", function (event) {
+          var reason = event.reason;
+          showStartupError(reason && reason.stack ? reason.stack : String(reason));
+        });
+
+        window.setTimeout(function () {
+          var root = document.getElementById("root");
+          if (root && root.childElementCount === 0) {
+            showStartupError("No React content was rendered. Check the browser console and Vercel environment variables.");
+          }
+        }, 8000);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
