@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import FounderPwaSetup from "../components/founder/FounderPwaSetup.jsx";
+import { isFounderUser } from "../lib/founderAccess.js";
 import { supabase } from "../lib/supabase.js";
 
-const FOUNDER_EMAIL = "lilmunofficial18@gmail.com";
+function isValidInternalPath(value) {
+  return value.startsWith("/") && !value.startsWith("//");
+}
 
 function AdminNotifications() {
   const navigate = useNavigate();
@@ -21,7 +23,7 @@ function AdminNotifications() {
   useEffect(() => {
     let isMounted = true;
 
-    async function verifyAdmin() {
+    async function verifyFounder() {
       const {
         data: { session },
         error,
@@ -29,9 +31,7 @@ function AdminNotifications() {
 
       if (!isMounted) return;
 
-      const email = session?.user?.email?.trim().toLowerCase();
-
-      if (error || email !== FOUNDER_EMAIL.toLowerCase()) {
+      if (error || !isFounderUser(session?.user)) {
         navigate("/", { replace: true });
         return;
       }
@@ -39,10 +39,21 @@ function AdminNotifications() {
       setIsChecking(false);
     }
 
-    verifyAdmin();
+    verifyFounder();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      if (!isMounted) return;
+
+      if (!isFounderUser(currentSession?.user)) {
+        navigate("/", { replace: true });
+      }
+    });
 
     return () => {
       isMounted = false;
+      subscription.unsubscribe();
     };
   }, [navigate]);
 
@@ -55,6 +66,11 @@ function AdminNotifications() {
 
     if (!cleanTitle || !cleanBody) {
       setErrorMessage("Add a title and message before sending.");
+      return;
+    }
+
+    if (!isValidInternalPath(cleanUrl)) {
+      setErrorMessage("Destination must be an internal AIWCORE path beginning with one /.");
       return;
     }
 
@@ -98,9 +114,7 @@ function AdminNotifications() {
 
   return (
     <main className="min-h-screen bg-slate-950 px-5 py-8 text-white sm:px-8">
-      <FounderPwaSetup />
-
-      <div className="mx-auto mt-6 w-full max-w-3xl">
+      <div className="mx-auto w-full max-w-3xl">
         <button
           type="button"
           onClick={() => navigate("/founder/lilmun")}
@@ -169,7 +183,7 @@ function AdminNotifications() {
               className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 outline-none focus:border-blue-500"
             />
             <p className="mt-2 text-xs text-slate-500">
-              Use an AIWCORE path such as /, /profile, or /founder-support.
+              Use an internal AIWCORE path such as /, /profile, or /founder-support.
             </p>
           </div>
 
