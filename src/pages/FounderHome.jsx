@@ -6,29 +6,6 @@ import { supabase } from "../lib/supabase.js";
 
 const FOUNDER_EMAIL = "lilmunofficial18@gmail.com";
 
-const plannedTools = [
-  {
-    icon: "📝",
-    title: "Changelogs",
-    description: "Publish and manage what changed in each AIWCORE update.",
-  },
-  {
-    icon: "🚀",
-    title: "Release Center",
-    description: "Prepare release notes and control future platform rollouts.",
-  },
-  {
-    icon: "📊",
-    title: "Analytics",
-    description: "Review users, subscribers, listings, and platform activity.",
-  },
-  {
-    icon: "👥",
-    title: "Users",
-    description: "View member accounts and future moderation controls.",
-  },
-];
-
 function FounderHome() {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
@@ -113,7 +90,7 @@ function FounderHome() {
           </h1>
 
           <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-            Run AIWCORE from your phone. Notification controls are active now, and every future founder tool will live in this private workspace.
+            Your private mobile control center for AIWCORE. Only tools that are fully connected and ready to use appear here.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -146,7 +123,7 @@ function FounderHome() {
 
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
-              Live Tool
+              Active Tool
             </p>
             <p className="mt-3 text-2xl font-black text-white">Notifications</p>
             <p className="mt-1 text-sm text-blue-400">Ready from mobile</p>
@@ -167,51 +144,31 @@ function FounderHome() {
               <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-400">
                 Quick Actions
               </p>
-              <h2 className="mt-2 text-2xl font-black">Founder tools</h2>
+              <h2 className="mt-2 text-2xl font-black">Available founder tools</h2>
             </div>
 
             <span className="text-xs font-bold text-slate-500">v1.0</span>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => navigate("/founder/lilmun/notifications")}
-              className="group rounded-3xl border border-blue-500/30 bg-blue-500/10 p-6 text-left transition hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-500/15"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="text-3xl">🔔</div>
-                <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-300">
-                  LIVE
-                </span>
-              </div>
-              <h3 className="mt-5 text-xl font-black">Push Notifications</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-400">
-                Send announcements, update alerts, and important messages directly from your phone.
-              </p>
-              <p className="mt-5 text-sm font-black text-blue-400 group-hover:text-blue-300">
-                Open Notification Center →
-              </p>
-            </button>
-
-            {plannedTools.map((tool) => (
-              <div
-                key={tool.title}
-                className="rounded-3xl border border-slate-800 bg-slate-900/55 p-6"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="text-3xl">{tool.icon}</div>
-                  <span className="rounded-full border border-slate-700 px-3 py-1 text-xs font-black text-slate-500">
-                    SOON
-                  </span>
-                </div>
-                <h3 className="mt-5 text-xl font-black text-slate-200">{tool.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  {tool.description}
-                </p>
-              </div>
-            ))}
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/founder/lilmun/notifications")}
+            className="group w-full rounded-3xl border border-blue-500/30 bg-blue-500/10 p-6 text-left transition hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-500/15"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="text-3xl">🔔</div>
+              <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-300">
+                LIVE
+              </span>
+            </div>
+            <h3 className="mt-5 text-xl font-black">Push Notifications</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Send announcements, update alerts, and important messages directly from your phone.
+            </p>
+            <p className="mt-5 text-sm font-black text-blue-400 group-hover:text-blue-300">
+              Open Notification Center →
+            </p>
+          </button>
         </section>
 
         <div className="mt-8">
