@@ -15,7 +15,6 @@ import SubmitTool from "./components/SubmitTool.jsx";
 
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
-import AdminNotifications from "./pages/AdminNotifications.jsx";
 import FounderSupport from "./pages/FounderSupport.jsx";
 import Login from "./pages/Login.jsx";
 import Profile from "./pages/Profile.jsx";
@@ -254,15 +253,6 @@ function App() {
           element={
             <ProtectedRoute redirectTo="/admin-login">
               <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/notifications"
-          element={
-            <ProtectedRoute redirectTo="/admin-login">
-              <AdminNotifications />
             </ProtectedRoute>
           }
         />
