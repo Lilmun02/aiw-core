@@ -16,6 +16,7 @@ import SubmitTool from "./components/SubmitTool.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
 import AdminNotifications from "./pages/AdminNotifications.jsx";
+import FounderHome from "./pages/FounderHome.jsx";
 import FounderSupport from "./pages/FounderSupport.jsx";
 import Login from "./pages/Login.jsx";
 import Profile from "./pages/Profile.jsx";
@@ -248,12 +249,26 @@ function App() {
         />
 
         <Route
-          path="/founder/notifications"
+          path="/founder/lilmun"
+          element={
+            <ProtectedRoute>
+              <FounderHome />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/founder/lilmun/notifications"
           element={
             <ProtectedRoute>
               <AdminNotifications />
             </ProtectedRoute>
           }
+        />
+
+        <Route
+          path="/founder/notifications"
+          element={<Navigate to="/founder/lilmun/notifications" replace />}
         />
 
         <Route path="/admin-login" element={<AdminLogin />} />
