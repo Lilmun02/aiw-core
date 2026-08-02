@@ -1,4 +1,4 @@
- import AvatarCard from "./AvatarCard";
+import AvatarCard from "./AvatarCard";
 import ProfileStatsRow from "./ProfileStatsRow";
 
 function ProfileHeader({
@@ -15,9 +15,6 @@ function ProfileHeader({
   onBadgesClick,
   onStreakClick,
   onAchievementsClick,
-  onEditProfile,
-  onLogout,
-  isLoggingOut = false,
 }) {
   return (
     <>
@@ -38,7 +35,7 @@ function ProfileHeader({
       </div>
 
       <div className="relative px-6 pb-1 sm:px-10">
-        <div className="-mt-16 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="-mt-16">
           <AvatarCard
             avatarUrl={avatarUrl}
             displayName={displayName}
@@ -48,25 +45,6 @@ function ProfileHeader({
             onUploadAvatar={onUploadAvatar}
             onRemoveAvatar={onRemoveAvatar}
           />
-
-          <div className="flex flex-wrap gap-3 pb-2">
-            <button
-              type="button"
-              onClick={onEditProfile}
-              className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-500"
-            >
-              Edit Profile
-            </button>
-
-            <button
-              type="button"
-              onClick={onLogout}
-              disabled={isLoggingOut}
-              className="rounded-xl border border-red-500/40 px-5 py-3 text-sm font-bold text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isLoggingOut ? "Logging Out..." : "Log Out"}
-            </button>
-          </div>
         </div>
 
         <div className="mt-7">
