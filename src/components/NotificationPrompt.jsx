@@ -8,6 +8,13 @@ import {
 
 const DISMISSED_KEY = "aiwcore-push-prompt-dismissed";
 
+function isInstalledApp() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true
+  );
+}
+
 function NotificationPrompt() {
   const [isVisible, setIsVisible] = useState(false);
   const [isEnabling, setIsEnabling] = useState(false);
@@ -15,9 +22,10 @@ function NotificationPrompt() {
 
   useEffect(() => {
     let isMounted = true;
+    let promptTimer;
 
     async function checkStatus() {
-      if (!supportsPushNotifications()) {
+      if (!isInstalledApp() || !supportsPushNotifications()) {
         return;
       }
 
@@ -32,11 +40,11 @@ function NotificationPrompt() {
       const subscription = await getCurrentPushSubscription().catch(() => null);
 
       if (isMounted && !subscription) {
-        window.setTimeout(() => {
+        promptTimer = window.setTimeout(() => {
           if (isMounted) {
             setIsVisible(true);
           }
-        }, 2500);
+        }, 5000);
       }
     }
 
@@ -44,6 +52,10 @@ function NotificationPrompt() {
 
     return () => {
       isMounted = false;
+
+      if (promptTimer) {
+        window.clearTimeout(promptTimer);
+      }
     };
   }, []);
 
@@ -53,6 +65,7 @@ function NotificationPrompt() {
 
     try {
       await subscribeToPushNotifications();
+      window.localStorage.removeItem(DISMISSED_KEY);
       setIsVisible(false);
     } catch (error) {
       setErrorMessage(
@@ -85,8 +98,8 @@ function NotificationPrompt() {
           <h2 className="font-black">Stay updated with AIWCORE</h2>
 
           <p className="mt-2 text-sm leading-6 text-slate-400">
-            Get important feature releases, platform announcements, and Founder
-            Support updates before opening the app.
+            Get notified when new AIWCORE app updates, features, and important
+            announcements go live.
           </p>
 
           {errorMessage && (
