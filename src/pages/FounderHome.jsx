@@ -1,17 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import FounderPwaSetup from "../components/founder/FounderPwaSetup.jsx";
+import {
+  getFounderDisplayName,
+  isFounderUser,
+} from "../lib/founderAccess.js";
 import { supabase } from "../lib/supabase.js";
-
-const FOUNDER_EMAIL = "lilmunofficial18@gmail.com";
-
-function toLocalDateString(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 function FounderHome() {
   const navigate = useNavigate();
@@ -34,7 +28,6 @@ function FounderHome() {
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-
     if (hour < 12) return "Good morning";
     if (hour < 18) return "Good afternoon";
     return "Good evening";
@@ -44,40 +37,20 @@ function FounderHome() {
     setIsLoadingStats(true);
     setStatsError("");
 
-    const today = new Date();
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - 6);
+    const { data, error } = await supabase.rpc("get_founder_member_stats");
 
-    const todayDate = toLocalDateString(today);
-    const weekStartDate = toLocalDateString(weekStart);
-
-    const [membersResult, todayResult, weekResult] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id", { count: "exact", head: true }),
-      supabase
-        .from("user_streaks")
-        .select("user_id", { count: "exact", head: true })
-        .gte("last_active_date", todayDate),
-      supabase
-        .from("user_streaks")
-        .select("user_id", { count: "exact", head: true })
-        .gte("last_active_date", weekStartDate),
-    ]);
-
-    const firstError =
-      membersResult.error || todayResult.error || weekResult.error;
-
-    if (firstError) {
-      setStatsError(firstError.message);
+    if (error) {
+      setStatsError(error.message);
       setIsLoadingStats(false);
       return;
     }
 
+    const stats = Array.isArray(data) ? data[0] : data;
+
     setMemberStats({
-      totalMembers: membersResult.count ?? 0,
-      activeToday: todayResult.count ?? 0,
-      activeThisWeek: weekResult.count ?? 0,
+      totalMembers: Number(stats?.total_members ?? 0),
+      activeToday: Number(stats?.active_today ?? 0),
+      activeThisWeek: Number(stats?.active_this_week ?? 0),
     });
     setIsLoadingStats(false);
   }
@@ -93,18 +66,12 @@ function FounderHome() {
 
       if (!isMounted) return;
 
-      const email = session?.user?.email?.trim().toLowerCase();
-
-      if (error || email !== FOUNDER_EMAIL.toLowerCase()) {
+      if (error || !isFounderUser(session?.user)) {
         navigate("/", { replace: true });
         return;
       }
 
-      const metadata = session?.user?.user_metadata ?? {};
-      const displayName =
-        metadata.display_name || metadata.full_name || metadata.name || "LilMun";
-
-      setFounderName(displayName);
+      setFounderName(getFounderDisplayName(session.user));
       setIsChecking(false);
       loadMemberStats();
     }
@@ -139,27 +106,11 @@ function FounderHome() {
     setPublishError(false);
     setPublishMessage("");
 
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    const email = session?.user?.email?.trim().toLowerCase();
-
-    if (sessionError || email !== FOUNDER_EMAIL.toLowerCase()) {
-      setIsPublishing(false);
-      setPublishError(true);
-      setPublishMessage("Founder verification failed. Please sign in again.");
-      return;
-    }
-
-    const { error } = await supabase.from("changelog_updates").insert({
-      version: cleanVersion,
-      title: cleanTitle,
-      description: cleanDescription || null,
-      changes,
-      is_published: true,
-      published_at: new Date().toISOString(),
+    const { error } = await supabase.rpc("publish_changelog_update", {
+      p_version: cleanVersion,
+      p_title: cleanTitle,
+      p_description: cleanDescription || null,
+      p_changes: changes,
     });
 
     setIsPublishing(false);
@@ -219,10 +170,20 @@ function FounderHome() {
           </h1>
 
           <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-            Your private mobile control center for AIWCORE. Notifications, changelog publishing, and member activity stats are ready to use.
+            Your private mobile control center for AIWCORE. Operations,
+            notifications, changelogs, and member activity are available in one
+            place.
           </p>
 
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <button
+              type="button"
+              onClick={() => navigate("/founder/lilmun/operations")}
+              className="rounded-2xl bg-emerald-500 px-5 py-3.5 text-sm font-black text-emerald-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400"
+            >
+              🛠 Open Platform Operations
+            </button>
+
             <button
               type="button"
               onClick={() => navigate("/founder/lilmun/notifications")}
@@ -254,13 +215,13 @@ function FounderHome() {
           </div>
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Active Tools</p>
-            <p className="mt-3 text-2xl font-black text-white">3 Live</p>
-            <p className="mt-1 text-sm text-blue-400">Notifications, logs + stats</p>
+            <p className="mt-3 text-2xl font-black text-white">4 Live</p>
+            <p className="mt-1 text-sm text-blue-400">Operations, notifications, logs + stats</p>
           </div>
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Security</p>
             <p className="mt-3 text-2xl font-black text-white">Founder Only</p>
-            <p className="mt-1 text-sm text-slate-400">Account verification active</p>
+            <p className="mt-1 text-sm text-slate-400">Server authorization active</p>
           </div>
         </section>
 
@@ -269,7 +230,7 @@ function FounderHome() {
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Member Activity</p>
               <h2 className="mt-2 text-2xl font-black">AIWCORE users</h2>
-              <p className="mt-2 text-sm text-slate-400">Based on profiles and the existing streak check-in activity.</p>
+              <p className="mt-2 text-sm text-slate-400">Secure UTC activity totals from the founder statistics function.</p>
             </div>
             <button
               type="button"
@@ -303,7 +264,14 @@ function FounderHome() {
           )}
         </section>
 
-        <section className="mt-8 grid gap-4 sm:grid-cols-2">
+        <section className="mt-8 grid gap-4 sm:grid-cols-3">
+          <button type="button" onClick={() => navigate("/founder/lilmun/operations")} className="group rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-left transition hover:-translate-y-0.5 hover:border-emerald-400 hover:bg-emerald-500/15">
+            <div className="flex items-start justify-between gap-4"><div className="text-3xl">🛠</div><span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-300">LIVE</span></div>
+            <h2 className="mt-5 text-xl font-black">Platform Operations</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-400">Manage submissions, public listings, removed tools, and feedback from Founder Control.</p>
+            <p className="mt-5 text-sm font-black text-emerald-300 group-hover:text-emerald-200">Open Operations →</p>
+          </button>
+
           <button type="button" onClick={() => navigate("/founder/lilmun/notifications")} className="group rounded-3xl border border-blue-500/30 bg-blue-500/10 p-6 text-left transition hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-500/15">
             <div className="flex items-start justify-between gap-4"><div className="text-3xl">🔔</div><span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-300">LIVE</span></div>
             <h2 className="mt-5 text-xl font-black">Push Notifications</h2>
@@ -314,7 +282,7 @@ function FounderHome() {
           <button type="button" onClick={() => document.getElementById("publish-changelog")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="group rounded-3xl border border-violet-500/30 bg-violet-500/10 p-6 text-left transition hover:-translate-y-0.5 hover:border-violet-400 hover:bg-violet-500/15">
             <div className="flex items-start justify-between gap-4"><div className="text-3xl">📝</div><span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-300">LIVE</span></div>
             <h2 className="mt-5 text-xl font-black">Publish Changelog</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-400">Publish version notes directly to the existing AIWCORE changelog system.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-400">Publish version notes through the secure AIWCORE changelog function.</p>
             <p className="mt-5 text-sm font-black text-violet-300 group-hover:text-violet-200">Open Publisher ↓</p>
           </button>
         </section>
@@ -343,8 +311,6 @@ function FounderHome() {
             </button>
           </form>
         </section>
-
-        <div className="mt-8"><FounderPwaSetup /></div>
       </div>
     </main>
   );
