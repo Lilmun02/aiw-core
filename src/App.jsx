@@ -14,7 +14,6 @@ import SearchBar from "./components/SearchBar.jsx";
 import SubmitTool from "./components/SubmitTool.jsx";
 
 import AdminDashboard from "./pages/AdminDashboard.jsx";
-import AdminLogin from "./pages/AdminLogin.jsx";
 import AdminNotifications from "./pages/AdminNotifications.jsx";
 import FounderHome from "./pages/FounderHome.jsx";
 import FounderSupport from "./pages/FounderSupport.jsx";
@@ -22,47 +21,30 @@ import Login from "./pages/Login.jsx";
 import Profile from "./pages/Profile.jsx";
 import Signup from "./pages/Signup.jsx";
 
-const isFounderControlHost =
-  typeof window !== "undefined" &&
-  window.location.hostname.includes("aiwcore-control");
-
 function Home() {
   const [searchTerm, setSearchTerm] = useState("");
 
   function resetHome() {
     setSearchTerm("");
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   return (
     <div className="min-h-screen bg-[#070d1a] text-white">
       <Navbar onLogoClick={resetHome} />
-
       <main className="mx-auto w-full max-w-7xl px-5 pb-20 sm:px-8 lg:px-12">
         <div id="home">
           <Header />
-
-          <SearchBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-          />
+          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </div>
-
         <div id="categories">
           <Categories setSearchTerm={setSearchTerm} />
         </div>
-
         <div id="featured">
           <FeaturedTools searchTerm={searchTerm} />
         </div>
-
         <SubmitTool />
       </main>
-
       <Footer />
     </div>
   );
@@ -70,20 +52,15 @@ function Home() {
 
 function SubmitToolPage() {
   function returnHome() {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   return (
     <div className="min-h-screen bg-[#070d1a] text-white">
       <Navbar onLogoClick={returnHome} />
-
       <main className="mx-auto w-full max-w-5xl px-5 pb-20 pt-8 sm:px-8 lg:px-12">
         <SubmitTool />
       </main>
-
       <Footer />
     </div>
   );
@@ -110,9 +87,7 @@ function ProtectedRoute({ children, redirectTo = "/login" }) {
         data: { session: currentSession },
       } = await supabase.auth.getSession();
 
-      if (isMounted) {
-        setSession(currentSession);
-      }
+      if (isMounted) setSession(currentSession);
     }
 
     loadSession();
@@ -120,9 +95,7 @@ function ProtectedRoute({ children, redirectTo = "/login" }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      if (isMounted) {
-        setSession(currentSession);
-      }
+      if (isMounted) setSession(currentSession);
     });
 
     return () => {
@@ -142,10 +115,7 @@ function ProtectedRoute({ children, redirectTo = "/login" }) {
     );
   }
 
-  if (!session) {
-    return <Navigate to={redirectTo} replace />;
-  }
-
+  if (!session) return <Navigate to={redirectTo} replace />;
   return children;
 }
 
@@ -156,18 +126,12 @@ function App() {
 
     async function checkInUser(currentSession) {
       const userId = currentSession?.user?.id;
-
-      if (!userId || checkedUsers.has(userId)) {
-        return;
-      }
+      if (!userId || checkedUsers.has(userId)) return;
 
       checkedUsers.add(userId);
-
       const { error } = await supabase.rpc("check_in_user_streak");
 
-      if (!isMounted) {
-        return;
-      }
+      if (!isMounted) return;
 
       if (error) {
         checkedUsers.delete(userId);
@@ -181,18 +145,12 @@ function App() {
         error,
       } = await supabase.auth.getSession();
 
-      if (!isMounted) {
-        return;
-      }
-
+      if (!isMounted) return;
       if (error) {
         console.error("Unable to load session for streak:", error.message);
         return;
       }
-
-      if (session) {
-        checkInUser(session);
-      }
+      if (session) checkInUser(session);
     }
 
     loadCurrentSession();
@@ -200,11 +158,7 @@ function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      if (!isMounted || !currentSession) {
-        return;
-      }
-
-      checkInUser(currentSession);
+      if (isMounted && currentSession) checkInUser(currentSession);
     });
 
     return () => {
@@ -216,17 +170,7 @@ function App() {
   return (
     <>
       <Routes>
-        <Route
-          path="/"
-          element={
-            isFounderControlHost ? (
-              <Navigate to="/founder/lilmun" replace />
-            ) : (
-              <Home />
-            )
-          }
-        />
-
+        <Route path="/" element={<Home />} />
         <Route path="/feedback" element={<FeedbackPage />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
@@ -277,33 +221,21 @@ function App() {
         />
 
         <Route
-          path="/founder/notifications"
-          element={<Navigate to="/founder/lilmun/notifications" replace />}
-        />
-
-        <Route path="/admin-login" element={<AdminLogin />} />
-
-        <Route
-          path="/admin"
+          path="/founder/lilmun/operations"
           element={
-            <ProtectedRoute redirectTo="/admin-login">
+            <ProtectedRoute>
               <AdminDashboard />
             </ProtectedRoute>
           }
         />
 
-        <Route
-          path="*"
-          element={
-            <Navigate
-              to={isFounderControlHost ? "/founder/lilmun" : "/"}
-              replace
-            />
-          }
-        />
+        <Route path="/founder/notifications" element={<Navigate to="/founder/lilmun/notifications" replace />} />
+        <Route path="/admin" element={<Navigate to="/founder/lilmun/operations" replace />} />
+        <Route path="/admin-login" element={<Navigate to="/founder/lilmun" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {!isFounderControlHost && <NotificationPrompt />}
+      <NotificationPrompt />
     </>
   );
 }
