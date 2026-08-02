@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 import AvatarCard from "./AvatarCard";
 import ProfileStatsRow from "./ProfileStatsRow";
 
@@ -16,6 +18,8 @@ function ProfileHeader({
   onStreakClick,
   onAchievementsClick,
 }) {
+  const navigate = useNavigate();
+
   return (
     <>
       <div className="relative h-48 overflow-hidden bg-gradient-to-br from-blue-700 via-indigo-700 to-cyan-500 sm:h-56">
@@ -46,6 +50,25 @@ function ProfileHeader({
             onRemoveAvatar={onRemoveAvatar}
           />
         </div>
+
+        {isFounder && (
+          <button
+            type="button"
+            onClick={() => navigate("/founder/lilmun")}
+            className="mt-6 flex w-full items-center justify-between rounded-2xl border border-amber-400/35 bg-amber-400/10 px-5 py-4 text-left transition hover:border-amber-300 hover:bg-amber-400/15 active:scale-[0.99]"
+          >
+            <span>
+              <span className="block text-sm font-black text-amber-200">
+                👑 Founder Control
+              </span>
+              <span className="mt-1 block text-sm text-slate-400">
+                Manage AIWCORE from your phone.
+              </span>
+            </span>
+
+            <span className="text-xl text-amber-200">→</span>
+          </button>
+        )}
 
         <div className="mt-7">
           <ProfileStatsRow
