@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import FounderPwaSetup from "../components/founder/FounderPwaSetup.jsx";
 import { supabase } from "../lib/supabase.js";
 
 const FOUNDER_EMAIL = "lilmunofficial18@gmail.com";
@@ -47,7 +48,9 @@ function FounderHome() {
 
   return (
     <main className="min-h-screen bg-slate-950 px-5 py-8 text-white sm:px-8">
-      <div className="mx-auto w-full max-w-4xl">
+      <FounderPwaSetup />
+
+      <div className="mx-auto mt-6 w-full max-w-4xl">
         <button
           type="button"
           onClick={() => navigate("/")}
@@ -58,13 +61,13 @@ function FounderHome() {
 
         <header className="mt-8 border-b border-slate-800 pb-8">
           <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-400">
-            Founder Workspace
+            Private Founder PWA
           </p>
 
           <h1 className="mt-3 text-4xl font-black">LilMun Control Center</h1>
 
           <p className="mt-3 max-w-2xl leading-7 text-slate-400">
-            Private tools for managing AIWCORE releases, communication, and future founder operations.
+            Your mobile command center for AIWCORE. Push notifications are live now, and future founder tools will be added here without requiring a computer.
           </p>
         </header>
 
@@ -77,15 +80,15 @@ function FounderHome() {
             <div className="text-3xl">🔔</div>
             <h2 className="mt-4 text-xl font-black">Push Notifications</h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Send app announcements and release updates to every subscribed device.
+              Send app announcements and release updates from your phone.
             </p>
           </button>
 
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 opacity-70">
             <div className="text-3xl">🚀</div>
-            <h2 className="mt-4 text-xl font-black">More Founder Tools</h2>
+            <h2 className="mt-4 text-xl font-black">Coming Next</h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Releases, changelogs, analytics, and platform controls can be added here later.
+              Releases, changelogs, analytics, users, listings, and platform controls.
             </p>
           </div>
         </section>
