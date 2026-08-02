@@ -1,4 +1,4 @@
- import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { supabase } from "./lib/supabase.js";
@@ -9,11 +9,13 @@ import FeedbackForm from "./components/FeedbackForm.jsx";
 import Footer from "./components/Footer.jsx";
 import Header from "./components/Header.jsx";
 import Navbar from "./components/Navbar.jsx";
+import NotificationPrompt from "./components/NotificationPrompt.jsx";
 import SearchBar from "./components/SearchBar.jsx";
 import SubmitTool from "./components/SubmitTool.jsx";
 
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
+import AdminNotifications from "./pages/AdminNotifications.jsx";
 import FounderSupport from "./pages/FounderSupport.jsx";
 import Login from "./pages/Login.jsx";
 import Profile from "./pages/Profile.jsx";
@@ -208,55 +210,68 @@ function App() {
   }, []);
 
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
+    <>
+      <Routes>
+        <Route path="/" element={<Home />} />
 
-      <Route path="/feedback" element={<FeedbackPage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
 
-      <Route path="/signup" element={<Signup />} />
+        <Route path="/signup" element={<Signup />} />
 
-      <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login />} />
 
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/founder-support"
-        element={
-          <ProtectedRoute>
-            <FounderSupport />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/founder-support"
+          element={
+            <ProtectedRoute>
+              <FounderSupport />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/submit-tool"
-        element={
-          <ProtectedRoute>
-            <SubmitToolPage />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/submit-tool"
+          element={
+            <ProtectedRoute>
+              <SubmitToolPage />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route path="/admin-login" element={<AdminLogin />} />
+        <Route path="/admin-login" element={<AdminLogin />} />
 
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute redirectTo="/admin-login">
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute redirectTo="/admin-login">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route
+          path="/admin/notifications"
+          element={
+            <ProtectedRoute redirectTo="/admin-login">
+              <AdminNotifications />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      <NotificationPrompt />
+    </>
   );
 }
 
