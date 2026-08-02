@@ -1,4 +1,5 @@
-import AvatarCard from "./AvatarCard";
+ import AvatarCard from "./AvatarCard";
+import ProfileStatsRow from "./ProfileStatsRow";
 
 function ProfileHeader({
   avatarUrl,
@@ -8,6 +9,12 @@ function ProfileHeader({
   isRemovingAvatar = false,
   onUploadAvatar,
   onRemoveAvatar,
+  badgeCount = 0,
+  currentStreak = 0,
+  achievementCount = 0,
+  onBadgesClick,
+  onStreakClick,
+  onAchievementsClick,
   onEditProfile,
   onLogout,
   isLoggingOut = false,
@@ -30,7 +37,7 @@ function ProfileHeader({
         </div>
       </div>
 
-      <div className="relative px-6 pb-8 sm:px-10">
+      <div className="relative px-6 pb-1 sm:px-10">
         <div className="-mt-16 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <AvatarCard
             avatarUrl={avatarUrl}
@@ -42,7 +49,7 @@ function ProfileHeader({
             onRemoveAvatar={onRemoveAvatar}
           />
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 pb-2">
             <button
               type="button"
               onClick={onEditProfile}
@@ -60,6 +67,17 @@ function ProfileHeader({
               {isLoggingOut ? "Logging Out..." : "Log Out"}
             </button>
           </div>
+        </div>
+
+        <div className="mt-7">
+          <ProfileStatsRow
+            badgeCount={badgeCount}
+            currentStreak={currentStreak}
+            achievementCount={achievementCount}
+            onBadgesClick={onBadgesClick}
+            onStreakClick={onStreakClick}
+            onAchievementsClick={onAchievementsClick}
+          />
         </div>
       </div>
     </>

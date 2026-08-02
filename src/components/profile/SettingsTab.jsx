@@ -1,13 +1,18 @@
  function SettingsTab({
+  user,
   displayName,
   setDisplayName,
   email,
   message,
   isError,
   isSaving,
+  handleSave,
   onSave,
   onCancel,
 }) {
+  const accountEmail = email || user?.email || "";
+  const saveProfile = onSave || handleSave;
+
   return (
     <section className="mx-auto max-w-3xl">
       <div className="mb-8">
@@ -25,7 +30,7 @@
       </div>
 
       <form
-        onSubmit={onSave}
+        onSubmit={saveProfile}
         className="space-y-6 rounded-3xl border border-slate-800 bg-[#0a1221] p-6 sm:p-8"
       >
         <div>
@@ -59,7 +64,7 @@
           <input
             id="email"
             type="email"
-            value={email || ""}
+            value={accountEmail}
             readOnly
             className="w-full cursor-not-allowed rounded-xl border border-slate-800 bg-[#070d1a] px-4 py-3 text-slate-500"
           />
@@ -71,7 +76,7 @@
 
         {message && (
           <div
-            role="status"
+            role={isError ? "alert" : "status"}
             className={`rounded-xl border px-4 py-3 text-sm ${
               isError
                 ? "border-red-500/30 bg-red-500/10 text-red-300"
@@ -85,7 +90,7 @@
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"
-            disabled={isSaving}
+            disabled={isSaving || !saveProfile}
             className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSaving ? "Saving..." : "Save Profile"}

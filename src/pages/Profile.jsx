@@ -1,4 +1,4 @@
- import { useEffect, useState } from "react";
+ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import AchievementsTab from "../components/profile/AchievementsTab";
@@ -12,6 +12,13 @@ import {
   removeAvatar,
   uploadAvatar,
 } from "../lib/avatarStorage.js";
+
+import {
+  getAchievementCount,
+  getEarnedBadges,
+  getFeaturedBadge,
+} from "../lib/profileBadges.js";
+
 import { supabase } from "../lib/supabase.js";
 
 const emptyStreak = {
@@ -28,14 +35,20 @@ function Profile() {
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [streak, setStreak] = useState(emptyStreak);
+  const [isFounderSupporter, setIsFounderSupporter] =
+    useState(false);
+
   const [activeTab, setActiveTab] = useState("overview");
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] =
+    useState(false);
+  const [isRemovingAvatar, setIsRemovingAvatar] =
+    useState(false);
 
   const founderEmail = "lilmunofficial18@gmail.com";
 
@@ -88,7 +101,11 @@ function Profile() {
         );
       }
 
-      const [profileResult, streakResult] = await Promise.all([
+      const [
+        profileResult,
+        streakResult,
+        supporterResult,
+      ] = await Promise.all([
         supabase
           .from("profiles")
           .select("display_name, avatar_url")
@@ -100,6 +117,12 @@ function Profile() {
           .select(
             "current_streak, longest_streak, total_days, last_active_date",
           )
+          .eq("user_id", currentUser.id)
+          .maybeSingle(),
+
+        supabase
+          .from("founder_supporters")
+          .select("user_id")
           .eq("user_id", currentUser.id)
           .maybeSingle(),
       ]);
@@ -115,11 +138,30 @@ function Profile() {
         );
       } else if (streakResult.data) {
         setStreak({
-          current_streak: streakResult.data.current_streak || 0,
-          longest_streak: streakResult.data.longest_streak || 0,
-          total_days: streakResult.data.total_days || 0,
-          last_active_date: streakResult.data.last_active_date || null,
+          current_streak:
+            streakResult.data.current_streak || 0,
+          longest_streak:
+            streakResult.data.longest_streak || 0,
+          total_days:
+            streakResult.data.total_days || 0,
+          last_active_date:
+            streakResult.data.last_active_date || null,
         });
+      } else {
+        setStreak(emptyStreak);
+      }
+
+      if (supporterResult.error) {
+        console.error(
+          "Unable to load Founder Supporter status:",
+          supporterResult.error.message,
+        );
+
+        setIsFounderSupporter(false);
+      } else {
+        setIsFounderSupporter(
+          Boolean(supporterResult.data),
+        );
       }
 
       if (profileResult.error) {
@@ -133,14 +175,22 @@ function Profile() {
 
       if (profileResult.data) {
         setDisplayName(
-          profileResult.data.display_name || defaultDisplayName,
+          profileResult.data.display_name ||
+            defaultDisplayName,
         );
-        setAvatarUrl(profileResult.data.avatar_url || null);
+
+        setAvatarUrl(
+          profileResult.data.avatar_url || null,
+        );
+
         setIsLoading(false);
         return;
       }
 
-      const { data: createdProfile, error: createError } = await supabase
+      const {
+        data: createdProfile,
+        error: createError,
+      } = await supabase
         .from("profiles")
         .upsert(
           {
@@ -169,9 +219,14 @@ function Profile() {
       }
 
       setDisplayName(
-        createdProfile?.display_name || defaultDisplayName,
+        createdProfile?.display_name ||
+          defaultDisplayName,
       );
-      setAvatarUrl(createdProfile?.avatar_url || null);
+
+      setAvatarUrl(
+        createdProfile?.avatar_url || null,
+      );
+
       setIsLoading(false);
     }
 
@@ -179,15 +234,22 @@ function Profile() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      if (!isMounted) {
-        return;
-      }
+    } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        if (!isMounted) {
+          return;
+        }
 
-      if (event === "SIGNED_OUT" || !currentSession) {
-        navigate("/login", { replace: true });
-      }
-    });
+        if (
+          event === "SIGNED_OUT" ||
+          !currentSession
+        ) {
+          navigate("/login", {
+            replace: true,
+          });
+        }
+      },
+    );
 
     return () => {
       isMounted = false;
@@ -195,8 +257,51 @@ function Profile() {
     };
   }, [navigate]);
 
+  const isFounder =
+    user?.email?.toLowerCase() ===
+    founderEmail.toLowerCase();
+
+  const earnedBadges = useMemo(
+    () =>
+      getEarnedBadges({
+        isFounder,
+        isFounderSupporter,
+        hasEarlyAccess: false,
+        currentStreak:
+          streak.current_streak || 0,
+      }),
+    [
+      isFounder,
+      isFounderSupporter,
+      streak.current_streak,
+    ],
+  );
+
+  const featuredBadge = useMemo(
+    () => getFeaturedBadge(earnedBadges),
+    [earnedBadges],
+  );
+
+  const achievementCount = useMemo(
+    () =>
+      getAchievementCount({
+        earnedBadges,
+        currentStreak:
+          streak.current_streak || 0,
+        longestStreak:
+          streak.longest_streak || 0,
+        totalDays:
+          streak.total_days || 0,
+      }),
+    [earnedBadges, streak],
+  );
+
   async function handleUploadAvatar(file) {
-    if (!user || isUploadingAvatar || isRemovingAvatar) {
+    if (
+      !user ||
+      isUploadingAvatar ||
+      isRemovingAvatar
+    ) {
       return;
     }
 
@@ -205,15 +310,20 @@ function Profile() {
     setIsError(false);
 
     try {
-      const uploadedAvatarUrl = await uploadAvatar({
-        userId: user.id,
-        file,
-      });
+      const uploadedAvatarUrl =
+        await uploadAvatar({
+          userId: user.id,
+          file,
+        });
 
       setAvatarUrl(uploadedAvatarUrl);
-      setMessage("Profile picture updated successfully.");
+
+      setMessage(
+        "Profile picture updated successfully.",
+      );
     } catch (error) {
       setIsError(true);
+
       setMessage(
         error instanceof Error
           ? error.message
@@ -250,9 +360,13 @@ function Profile() {
       await removeAvatar(user.id);
 
       setAvatarUrl(null);
-      setMessage("Profile picture removed successfully.");
+
+      setMessage(
+        "Profile picture removed successfully.",
+      );
     } catch (error) {
       setIsError(true);
+
       setMessage(
         error instanceof Error
           ? error.message
@@ -270,11 +384,14 @@ function Profile() {
       return;
     }
 
-    const cleanDisplayName = displayName.trim();
+    const cleanDisplayName =
+      displayName.trim();
 
     if (!cleanDisplayName) {
       setIsError(true);
-      setMessage("Please enter a display name.");
+      setMessage(
+        "Please enter a display name.",
+      );
       return;
     }
 
@@ -282,15 +399,17 @@ function Profile() {
     setMessage("");
     setIsError(false);
 
-    const { error } = await supabase.from("profiles").upsert(
-      {
-        id: user.id,
-        display_name: cleanDisplayName,
-      },
-      {
-        onConflict: "id",
-      },
-    );
+    const { error } = await supabase
+      .from("profiles")
+      .upsert(
+        {
+          id: user.id,
+          display_name: cleanDisplayName,
+        },
+        {
+          onConflict: "id",
+        },
+      );
 
     setIsSaving(false);
 
@@ -301,7 +420,10 @@ function Profile() {
     }
 
     setDisplayName(cleanDisplayName);
-    setMessage("Profile updated successfully.");
+
+    setMessage(
+      "Profile updated successfully.",
+    );
   }
 
   async function handleLogout() {
@@ -309,7 +431,8 @@ function Profile() {
     setMessage("");
     setIsError(false);
 
-    const { error } = await supabase.auth.signOut();
+    const { error } =
+      await supabase.auth.signOut();
 
     setIsLoggingOut(false);
 
@@ -319,7 +442,9 @@ function Profile() {
       return;
     }
 
-    navigate("/", { replace: true });
+    navigate("/", {
+      replace: true,
+    });
   }
 
   function changeTab(tabName) {
@@ -327,9 +452,6 @@ function Profile() {
     setMessage("");
     setIsError(false);
   }
-
-  const isFounder =
-    user?.email?.toLowerCase() === founderEmail.toLowerCase();
 
   const tabs = [
     {
@@ -344,14 +466,10 @@ function Profile() {
       id: "tools",
       label: "My Tools",
     },
-    ...(isFounder
-      ? [
-          {
-            id: "achievements",
-            label: "Achievements",
-          },
-        ]
-      : []),
+    {
+      id: "achievements",
+      label: "Achievements",
+    },
     {
       id: "settings",
       label: "Settings",
@@ -367,7 +485,15 @@ function Profile() {
         return <MyToolsTab />;
 
       case "achievements":
-        return isFounder ? <AchievementsTab /> : null;
+        return (
+          <AchievementsTab
+            earnedBadges={earnedBadges}
+            achievementCount={
+              achievementCount
+            }
+            streak={streak}
+          />
+        );
 
       case "settings":
         return (
@@ -379,7 +505,9 @@ function Profile() {
             isSaving={isSaving}
             message={message}
             isError={isError}
-            onCancel={() => changeTab("overview")}
+            onCancel={() =>
+              changeTab("overview")
+            }
           />
         );
 
@@ -388,8 +516,10 @@ function Profile() {
         return (
           <OverviewTab
             displayName={displayName}
-            isFounder={isFounder}
             streak={streak}
+            featuredBadge={
+              featuredBadge
+            }
           />
         );
     }
@@ -423,38 +553,75 @@ function Profile() {
 
           <button
             type="button"
-            onClick={() => changeTab("settings")}
+            onClick={() =>
+              changeTab("settings")
+            }
             className="rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-blue-500 hover:text-white"
           >
             ⚙ Settings
           </button>
         </div>
 
-        {message && activeTab !== "settings" && (
-          <div
-            role={isError ? "alert" : "status"}
-            className={`mb-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${
-              isError
-                ? "border-red-500/40 bg-red-500/10 text-red-200"
-                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-            }`}
-          >
-            {message}
-          </div>
-        )}
+        {message &&
+          activeTab !== "settings" && (
+            <div
+              role={
+                isError
+                  ? "alert"
+                  : "status"
+              }
+              className={`mb-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${
+                isError
+                  ? "border-red-500/40 bg-red-500/10 text-red-200"
+                  : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+              }`}
+            >
+              {message}
+            </div>
+          )}
 
         <section className="overflow-hidden rounded-3xl border border-slate-800 bg-[#0d1526] shadow-2xl">
           <ProfileHeader
             avatarUrl={avatarUrl}
             displayName={displayName}
             isFounder={isFounder}
-            isUploadingAvatar={isUploadingAvatar}
-            isRemovingAvatar={isRemovingAvatar}
-            onUploadAvatar={handleUploadAvatar}
-            onRemoveAvatar={handleRemoveAvatar}
-            onEditProfile={() => changeTab("settings")}
+            isUploadingAvatar={
+              isUploadingAvatar
+            }
+            isRemovingAvatar={
+              isRemovingAvatar
+            }
+            onUploadAvatar={
+              handleUploadAvatar
+            }
+            onRemoveAvatar={
+              handleRemoveAvatar
+            }
+            badgeCount={
+              earnedBadges.length
+            }
+            currentStreak={
+              streak.current_streak || 0
+            }
+            achievementCount={
+              achievementCount
+            }
+            onBadgesClick={() =>
+              changeTab("achievements")
+            }
+            onStreakClick={() =>
+              changeTab("overview")
+            }
+            onAchievementsClick={() =>
+              changeTab("achievements")
+            }
+            onEditProfile={() =>
+              changeTab("settings")
+            }
             onLogout={handleLogout}
-            isLoggingOut={isLoggingOut}
+            isLoggingOut={
+              isLoggingOut
+            }
           />
 
           <nav className="border-y border-slate-800 px-4 sm:px-8">
@@ -463,7 +630,9 @@ function Profile() {
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => changeTab(tab.id)}
+                  onClick={() =>
+                    changeTab(tab.id)
+                  }
                   className={`whitespace-nowrap border-b-2 px-4 py-4 text-sm font-bold transition ${
                     activeTab === tab.id
                       ? "border-blue-500 text-white"
