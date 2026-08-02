@@ -9,7 +9,7 @@ function AdminNotifications() {
   const navigate = useNavigate();
   const [title, setTitle] = useState("🎉 Welcome to AIWCORE");
   const [body, setBody] = useState(
-    "Push notifications are now live! You’ll receive important AIWCORE updates, new features, and platform announcements directly on your device.",
+    "Push Notifications are now live! You’ll receive important AIWCORE updates, new features, and platform announcements directly on your device.",
   );
   const [url, setUrl] = useState("/");
   const [isSending, setIsSending] = useState(false);
@@ -20,7 +20,7 @@ function AdminNotifications() {
   useEffect(() => {
     let isMounted = true;
 
-    async function verifyFounder() {
+    async function verifyAdmin() {
       const {
         data: { session },
         error,
@@ -38,23 +38,10 @@ function AdminNotifications() {
       setIsChecking(false);
     }
 
-    verifyFounder();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      if (!isMounted) return;
-
-      const email = currentSession?.user?.email?.trim().toLowerCase();
-
-      if (email !== FOUNDER_EMAIL.toLowerCase()) {
-        navigate("/", { replace: true });
-      }
-    });
+    verifyAdmin();
 
     return () => {
       isMounted = false;
-      subscription.unsubscribe();
     };
   }, [navigate]);
 
@@ -96,39 +83,38 @@ function AdminNotifications() {
     }
 
     setMessage(
-      `Notification sent to ${data?.sent || 0} device${data?.sent === 1 ? "" : "s"}. ${data?.failed ? `${data.failed} failed.` : ""}`.trim(),
+      `Notification sent to ${data?.sent || 0} device${data?.sent === 1 ? "" : "s"}. ${data?.failed ? `${data.failed} failed.` : ""}`,
     );
   }
 
   if (isChecking) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#070d1a] text-white">
+      <main className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
         <p className="text-slate-300">Verifying founder access...</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#070d1a] px-5 py-8 text-white sm:px-8">
+    <main className="min-h-screen bg-slate-950 px-5 py-8 text-white sm:px-8">
       <div className="mx-auto w-full max-w-3xl">
         <button
           type="button"
-          onClick={() => navigate("/profile")}
+          onClick={() => navigate("/founder/lilmun")}
           className="text-sm font-bold text-slate-400 transition hover:text-white"
         >
-          ← Back to My AIWCORE
+          ← Back to Founder Workspace
         </button>
 
         <header className="mt-8 border-b border-slate-800 pb-8">
           <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-400">
-            Founder Access Only
+            AIWCORE Founder Broadcasts
           </p>
 
           <h1 className="mt-3 text-4xl font-black">Push Notification Center</h1>
 
           <p className="mt-3 max-w-2xl leading-7 text-slate-400">
-            Send one announcement to every AIWCORE member or guest who enabled
-            push notifications on their device.
+            Send one announcement to every visitor or member who opted into AIWCORE push notifications.
           </p>
         </header>
 
@@ -137,13 +123,9 @@ function AdminNotifications() {
           className="mt-8 space-y-6 rounded-3xl border border-slate-800 bg-slate-900/70 p-6 sm:p-8"
         >
           <div>
-            <div className="mb-2 flex items-center justify-between gap-4">
-              <label htmlFor="push-title" className="block text-sm font-bold">
-                Notification title
-              </label>
-              <span className="text-xs text-slate-500">{title.length}/80</span>
-            </div>
-
+            <label htmlFor="push-title" className="mb-2 block text-sm font-bold">
+              Notification title
+            </label>
             <input
               id="push-title"
               value={title}
@@ -151,62 +133,51 @@ function AdminNotifications() {
               maxLength={80}
               required
               placeholder="AIWCORE Update"
-              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 outline-none transition focus:border-blue-500"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 outline-none focus:border-blue-500"
             />
           </div>
 
           <div>
-            <div className="mb-2 flex items-center justify-between gap-4">
-              <label htmlFor="push-body" className="block text-sm font-bold">
-                Message
-              </label>
-              <span className="text-xs text-slate-500">{body.length}/240</span>
-            </div>
-
+            <label htmlFor="push-body" className="mb-2 block text-sm font-bold">
+              Message
+            </label>
             <textarea
               id="push-body"
               value={body}
               onChange={(event) => setBody(event.target.value)}
               maxLength={240}
               required
-              rows={6}
+              rows={5}
               placeholder="Tell the AIWCORE community what changed."
-              className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 outline-none transition focus:border-blue-500"
+              className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 outline-none focus:border-blue-500"
             />
+            <p className="mt-2 text-right text-xs text-slate-500">{body.length}/240</p>
           </div>
 
           <div>
             <label htmlFor="push-url" className="mb-2 block text-sm font-bold">
               Open destination
             </label>
-
             <input
               id="push-url"
               value={url}
               onChange={(event) => setUrl(event.target.value)}
               placeholder="/"
-              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 outline-none transition focus:border-blue-500"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 outline-none focus:border-blue-500"
             />
-
             <p className="mt-2 text-xs text-slate-500">
               Use an AIWCORE path such as /, /profile, or /founder-support.
             </p>
           </div>
 
           {message && (
-            <div
-              role="status"
-              className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300"
-            >
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
               {message}
             </div>
           )}
 
           {errorMessage && (
-            <div
-              role="alert"
-              className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
-            >
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
               {errorMessage}
             </div>
           )}
