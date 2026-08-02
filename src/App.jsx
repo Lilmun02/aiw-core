@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-
-import { supabase } from "./lib/supabase.js";
 
 import Categories from "./components/Categories.jsx";
 import FeaturedTools from "./components/FeaturedTools.jsx";
@@ -12,14 +10,26 @@ import Navbar from "./components/Navbar.jsx";
 import NotificationPrompt from "./components/NotificationPrompt.jsx";
 import SearchBar from "./components/SearchBar.jsx";
 import SubmitTool from "./components/SubmitTool.jsx";
+import { supabase } from "./lib/supabase.js";
 
-import AdminDashboard from "./pages/AdminDashboard.jsx";
-import AdminNotifications from "./pages/AdminNotifications.jsx";
-import FounderHome from "./pages/FounderHome.jsx";
-import FounderSupport from "./pages/FounderSupport.jsx";
-import Login from "./pages/Login.jsx";
-import Profile from "./pages/Profile.jsx";
-import Signup from "./pages/Signup.jsx";
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard.jsx"));
+const AdminNotifications = lazy(() => import("./pages/AdminNotifications.jsx"));
+const FounderHome = lazy(() => import("./pages/FounderHome.jsx"));
+const FounderSupport = lazy(() => import("./pages/FounderSupport.jsx"));
+const Login = lazy(() => import("./pages/Login.jsx"));
+const Profile = lazy(() => import("./pages/Profile.jsx"));
+const Signup = lazy(() => import("./pages/Signup.jsx"));
+
+function LoadingScreen({ message = "Loading AIWCORE..." }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#070d1a] text-white">
+      <div className="text-center">
+        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-blue-500" />
+        <p className="text-slate-300">{message}</p>
+      </div>
+    </div>
+  );
+}
 
 function Home() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -104,19 +114,13 @@ function ProtectedRoute({ children, redirectTo = "/login" }) {
     };
   }, []);
 
-  if (session === undefined) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#070d1a] text-white">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-blue-500" />
-          <p className="text-slate-300">Loading AIWCORE...</p>
-        </div>
-      </div>
-    );
-  }
-
+  if (session === undefined) return <LoadingScreen />;
   if (!session) return <Navigate to={redirectTo} replace />;
   return children;
+}
+
+function LazyRoute({ children }) {
+  return <Suspense fallback={<LoadingScreen />}>{children}</Suspense>;
 }
 
 function App() {
@@ -172,62 +176,15 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/feedback" element={<FeedbackPage />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/submit-tool" element={<ProtectedRoute><SubmitToolPage /></ProtectedRoute>} />
 
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/founder-support"
-          element={
-            <ProtectedRoute>
-              <FounderSupport />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/submit-tool"
-          element={
-            <ProtectedRoute>
-              <SubmitToolPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/founder/lilmun"
-          element={
-            <ProtectedRoute>
-              <FounderHome />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/founder/lilmun/notifications"
-          element={
-            <ProtectedRoute>
-              <AdminNotifications />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/founder/lilmun/operations"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/signup" element={<LazyRoute><Signup /></LazyRoute>} />
+        <Route path="/login" element={<LazyRoute><Login /></LazyRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><LazyRoute><Profile /></LazyRoute></ProtectedRoute>} />
+        <Route path="/founder-support" element={<ProtectedRoute><LazyRoute><FounderSupport /></LazyRoute></ProtectedRoute>} />
+        <Route path="/founder/lilmun" element={<ProtectedRoute><LazyRoute><FounderHome /></LazyRoute></ProtectedRoute>} />
+        <Route path="/founder/lilmun/notifications" element={<ProtectedRoute><LazyRoute><AdminNotifications /></LazyRoute></ProtectedRoute>} />
+        <Route path="/founder/lilmun/operations" element={<ProtectedRoute><LazyRoute><AdminDashboard /></LazyRoute></ProtectedRoute>} />
 
         <Route path="/founder/notifications" element={<Navigate to="/founder/lilmun/notifications" replace />} />
         <Route path="/admin" element={<Navigate to="/founder/lilmun/operations" replace />} />
