@@ -12,9 +12,9 @@ import SearchBar from "./components/SearchBar.jsx";
 import SubmitTool from "./components/SubmitTool.jsx";
 import { supabase } from "./lib/supabase.js";
 
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard.jsx"));
 const AdminNotifications = lazy(() => import("./pages/AdminNotifications.jsx"));
 const FounderHome = lazy(() => import("./pages/FounderHome.jsx"));
+const FounderOperations = lazy(() => import("./pages/FounderOperations.jsx"));
 const FounderSupport = lazy(() => import("./pages/FounderSupport.jsx"));
 const Login = lazy(() => import("./pages/Login.jsx"));
 const Profile = lazy(() => import("./pages/Profile.jsx"));
@@ -184,7 +184,7 @@ function App() {
         <Route path="/founder-support" element={<ProtectedRoute><LazyRoute><FounderSupport /></LazyRoute></ProtectedRoute>} />
         <Route path="/founder/lilmun" element={<ProtectedRoute><LazyRoute><FounderHome /></LazyRoute></ProtectedRoute>} />
         <Route path="/founder/lilmun/notifications" element={<ProtectedRoute><LazyRoute><AdminNotifications /></LazyRoute></ProtectedRoute>} />
-        <Route path="/founder/lilmun/operations" element={<ProtectedRoute><LazyRoute><AdminDashboard /></LazyRoute></ProtectedRoute>} />
+        <Route path="/founder/lilmun/operations" element={<ProtectedRoute><LazyRoute><FounderOperations /></LazyRoute></ProtectedRoute>} />
 
         <Route path="/founder/notifications" element={<Navigate to="/founder/lilmun/notifications" replace />} />
         <Route path="/admin" element={<Navigate to="/founder/lilmun/operations" replace />} />
