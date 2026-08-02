@@ -22,6 +22,10 @@ import Login from "./pages/Login.jsx";
 import Profile from "./pages/Profile.jsx";
 import Signup from "./pages/Signup.jsx";
 
+const isFounderControlHost =
+  typeof window !== "undefined" &&
+  window.location.hostname.includes("aiwcore-control");
+
 function Home() {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -132,7 +136,6 @@ function ProtectedRoute({ children, redirectTo = "/login" }) {
       <div className="flex min-h-screen items-center justify-center bg-[#070d1a] text-white">
         <div className="text-center">
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-blue-500" />
-
           <p className="text-slate-300">Loading AIWCORE...</p>
         </div>
       </div>
@@ -213,12 +216,19 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route
+          path="/"
+          element={
+            isFounderControlHost ? (
+              <Navigate to="/founder/lilmun" replace />
+            ) : (
+              <Home />
+            )
+          }
+        />
 
         <Route path="/feedback" element={<FeedbackPage />} />
-
         <Route path="/signup" element={<Signup />} />
-
         <Route path="/login" element={<Login />} />
 
         <Route
@@ -282,10 +292,18 @@ function App() {
           }
         />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to={isFounderControlHost ? "/founder/lilmun" : "/"}
+              replace
+            />
+          }
+        />
       </Routes>
 
-      <NotificationPrompt />
+      {!isFounderControlHost && <NotificationPrompt />}
     </>
   );
 }
