@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import FounderPwaSetup from "../components/founder/FounderPwaSetup.jsx";
 import { supabase } from "../lib/supabase.js";
 
 const FOUNDER_EMAIL = "lilmunofficial18@gmail.com";
@@ -97,13 +98,15 @@ function AdminNotifications() {
 
   return (
     <main className="min-h-screen bg-slate-950 px-5 py-8 text-white sm:px-8">
-      <div className="mx-auto w-full max-w-3xl">
+      <FounderPwaSetup />
+
+      <div className="mx-auto mt-6 w-full max-w-3xl">
         <button
           type="button"
           onClick={() => navigate("/founder/lilmun")}
           className="text-sm font-bold text-slate-400 transition hover:text-white"
         >
-          ← Back to Founder Workspace
+          ← Back to Founder Control
         </button>
 
         <header className="mt-8 border-b border-slate-800 pb-8">
