@@ -1,4 +1,8 @@
- function SettingsTab({
+import { useState } from "react";
+
+import { supabase } from "../../lib/supabase.js";
+
+function SettingsTab({
   user,
   displayName,
   setDisplayName,
@@ -10,8 +14,26 @@
   onSave,
   onCancel,
 }) {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+
   const accountEmail = email || user?.email || "";
   const saveProfile = onSave || handleSave;
+
+  async function handleLogout() {
+    setIsLoggingOut(true);
+    setLogoutError("");
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      setLogoutError(error.message);
+      setIsLoggingOut(false);
+      return;
+    }
+
+    window.location.assign("/");
+  }
 
   return (
     <section className="mx-auto max-w-3xl">
@@ -105,6 +127,38 @@
           </button>
         </div>
       </form>
+
+      <section className="mt-8 border-t border-slate-800 pt-8">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+          Account Access
+        </p>
+
+        <h3 className="mt-2 text-xl font-black text-white">
+          Sign out of AIWCORE
+        </h3>
+
+        <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
+          You can sign back in at any time using your account email.
+        </p>
+
+        {logoutError && (
+          <div
+            role="alert"
+            className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+          >
+            {logoutError}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="mt-5 rounded-xl border border-red-500/40 px-6 py-3 font-bold text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isLoggingOut ? "Logging Out..." : "Log Out"}
+        </button>
+      </section>
     </section>
   );
 }
