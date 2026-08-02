@@ -10,6 +10,13 @@ function FounderHome() {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
   const [founderName, setFounderName] = useState("Founder");
+  const [version, setVersion] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [changesText, setChangesText] = useState("");
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishMessage, setPublishMessage] = useState("");
+  const [publishError, setPublishError] = useState(false);
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -52,6 +59,68 @@ function FounderHome() {
     };
   }, [navigate]);
 
+  async function publishChangelog(event) {
+    event.preventDefault();
+
+    const cleanVersion = version.trim().replace(/^v/i, "");
+    const cleanTitle = title.trim();
+    const cleanDescription = description.trim();
+    const changes = changesText
+      .split("\n")
+      .map((change) => change.trim())
+      .filter(Boolean);
+
+    if (!cleanVersion || !cleanTitle || changes.length === 0) {
+      setPublishError(true);
+      setPublishMessage(
+        "Add a version, title, and at least one change before publishing.",
+      );
+      return;
+    }
+
+    setIsPublishing(true);
+    setPublishError(false);
+    setPublishMessage("");
+
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    const email = session?.user?.email?.trim().toLowerCase();
+
+    if (sessionError || email !== FOUNDER_EMAIL.toLowerCase()) {
+      setIsPublishing(false);
+      setPublishError(true);
+      setPublishMessage("Founder verification failed. Please sign in again.");
+      return;
+    }
+
+    const { error } = await supabase.from("changelog_updates").insert({
+      version: cleanVersion,
+      title: cleanTitle,
+      description: cleanDescription || null,
+      changes,
+      is_published: true,
+      published_at: new Date().toISOString(),
+    });
+
+    setIsPublishing(false);
+
+    if (error) {
+      setPublishError(true);
+      setPublishMessage(error.message);
+      return;
+    }
+
+    setVersion("");
+    setTitle("");
+    setDescription("");
+    setChangesText("");
+    setPublishError(false);
+    setPublishMessage("Changelog published successfully.");
+  }
+
   if (isChecking) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-950 px-5 text-white">
@@ -90,7 +159,7 @@ function FounderHome() {
           </h1>
 
           <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-            Your private mobile control center for AIWCORE. Only tools that are fully connected and ready to use appear here.
+            Your private mobile control center for AIWCORE. Notifications and changelog publishing are ready to use.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -104,10 +173,15 @@ function FounderHome() {
 
             <button
               type="button"
-              onClick={() => window.location.reload()}
-              className="rounded-2xl border border-slate-700 bg-slate-900/70 px-5 py-3.5 text-sm font-black text-slate-200 transition hover:border-slate-600 hover:bg-slate-800"
+              onClick={() =>
+                document.getElementById("publish-changelog")?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+              }
+              className="rounded-2xl border border-violet-500/40 bg-violet-500/10 px-5 py-3.5 text-sm font-black text-violet-200 transition hover:border-violet-400 hover:bg-violet-500/15"
             >
-              ↻ Refresh Control Center
+              📝 Publish Changelog
             </button>
           </div>
         </header>
@@ -123,10 +197,10 @@ function FounderHome() {
 
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
-              Active Tool
+              Active Tools
             </p>
-            <p className="mt-3 text-2xl font-black text-white">Notifications</p>
-            <p className="mt-1 text-sm text-blue-400">Ready from mobile</p>
+            <p className="mt-3 text-2xl font-black text-white">2 Live</p>
+            <p className="mt-1 text-sm text-blue-400">Notifications + changelogs</p>
           </div>
 
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5">
@@ -138,22 +212,11 @@ function FounderHome() {
           </div>
         </section>
 
-        <section className="mt-8">
-          <div className="mb-4 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-400">
-                Quick Actions
-              </p>
-              <h2 className="mt-2 text-2xl font-black">Available founder tools</h2>
-            </div>
-
-            <span className="text-xs font-bold text-slate-500">v1.0</span>
-          </div>
-
+        <section className="mt-8 grid gap-4 sm:grid-cols-2">
           <button
             type="button"
             onClick={() => navigate("/founder/lilmun/notifications")}
-            className="group w-full rounded-3xl border border-blue-500/30 bg-blue-500/10 p-6 text-left transition hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-500/15"
+            className="group rounded-3xl border border-blue-500/30 bg-blue-500/10 p-6 text-left transition hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-500/15"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="text-3xl">🔔</div>
@@ -161,7 +224,7 @@ function FounderHome() {
                 LIVE
               </span>
             </div>
-            <h3 className="mt-5 text-xl font-black">Push Notifications</h3>
+            <h2 className="mt-5 text-xl font-black">Push Notifications</h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
               Send announcements, update alerts, and important messages directly from your phone.
             </p>
@@ -169,6 +232,111 @@ function FounderHome() {
               Open Notification Center →
             </p>
           </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              document.getElementById("publish-changelog")?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              })
+            }
+            className="group rounded-3xl border border-violet-500/30 bg-violet-500/10 p-6 text-left transition hover:-translate-y-0.5 hover:border-violet-400 hover:bg-violet-500/15"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="text-3xl">📝</div>
+              <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-300">
+                LIVE
+              </span>
+            </div>
+            <h2 className="mt-5 text-xl font-black">Publish Changelog</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Publish version notes directly to the existing AIWCORE changelog system.
+            </p>
+            <p className="mt-5 text-sm font-black text-violet-300 group-hover:text-violet-200">
+              Open Publisher ↓
+            </p>
+          </button>
+        </section>
+
+        <section
+          id="publish-changelog"
+          className="scroll-mt-6 mt-8 rounded-[2rem] border border-violet-500/25 bg-slate-900/70 p-5 sm:p-8"
+        >
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-violet-300">
+            Changelog Publisher
+          </p>
+          <h2 className="mt-2 text-2xl font-black">Publish an AIWCORE update</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            Each line in the changes box becomes its own bullet in the app changelog.
+          </p>
+
+          <form onSubmit={publishChangelog} className="mt-6 space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm font-bold text-slate-300">
+                Version
+                <input
+                  value={version}
+                  onChange={(event) => setVersion(event.target.value)}
+                  placeholder="0.4.1"
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-violet-400"
+                />
+              </label>
+
+              <label className="block text-sm font-bold text-slate-300">
+                Title
+                <input
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="Founder Control update"
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-violet-400"
+                />
+              </label>
+            </div>
+
+            <label className="block text-sm font-bold text-slate-300">
+              Description
+              <textarea
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="A quick summary of this release."
+                rows={3}
+                className="mt-2 w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-violet-400"
+              />
+            </label>
+
+            <label className="block text-sm font-bold text-slate-300">
+              Changes — one per line
+              <textarea
+                value={changesText}
+                onChange={(event) => setChangesText(event.target.value)}
+                placeholder={"Added Founder Control\nAdded mobile push sender\nImproved profile navigation"}
+                rows={6}
+                className="mt-2 w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-violet-400"
+              />
+            </label>
+
+            {publishMessage && (
+              <div
+                role={publishError ? "alert" : "status"}
+                className={`rounded-xl border px-4 py-3 text-sm font-bold ${
+                  publishError
+                    ? "border-red-500/40 bg-red-500/10 text-red-200"
+                    : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+                }`}
+              >
+                {publishMessage}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isPublishing}
+              className="w-full rounded-xl bg-violet-500 px-5 py-3.5 text-sm font-black text-white transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPublishing ? "Publishing..." : "Publish Changelog"}
+            </button>
+          </form>
         </section>
 
         <div className="mt-8">
