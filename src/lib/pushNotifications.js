@@ -17,17 +17,22 @@ export function supportsPushNotifications() {
 }
 
 export async function getPushPublicKey() {
-  const { data, error } = await supabase.rpc("get_push_public_key");
+  const { data, error } = await supabase.functions.invoke(
+    "get-push-public-key",
+    {
+      method: "GET",
+    },
+  );
 
   if (error) {
     throw new Error(error.message);
   }
 
-  if (!data) {
+  if (!data?.publicKey) {
     throw new Error("Push notifications are not configured yet.");
   }
 
-  return data;
+  return data.publicKey;
 }
 
 export async function getCurrentPushSubscription() {
@@ -54,16 +59,36 @@ export async function subscribeToPushNotifications() {
   const existingSubscription = await registration.pushManager.getSubscription();
   const publicKey = await getPushPublicKey();
 
-  const subscription =
-    existingSubscription ||
-    (await registration.pushManager.subscribe({
+  let subscription = existingSubscription;
+
+  if (subscription) {
+    const currentKey = subscription.options?.applicationServerKey;
+    const expectedKey = urlBase64ToUint8Array(publicKey);
+
+    const currentBytes = currentKey ? new Uint8Array(currentKey) : null;
+    const keysMatch =
+      currentBytes &&
+      currentBytes.length === expectedKey.length &&
+      currentBytes.every((byte, index) => byte === expectedKey[index]);
+
+    if (!keysMatch) {
+      await subscription.unsubscribe();
+      subscription = null;
+    }
+  }
+
+  if (!subscription) {
+    subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(publicKey),
-    }));
+    });
+  }
 
   const subscriptionJson = subscription.toJSON();
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
   const { error } = await supabase.rpc("upsert_push_subscription", {
     subscription_endpoint: subscription.endpoint,
