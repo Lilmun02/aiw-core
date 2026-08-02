@@ -1,11 +1,57 @@
 import { supabase } from "./supabase.js";
 
-function urlBase64ToUint8Array(value) {
-  const padding = "=".repeat((4 - (value.length % 4)) % 4);
-  const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const raw = window.atob(base64);
+function normalizeVapidPublicKey(value) {
+  if (typeof value !== "string") {
+    throw new Error("The push notification public key is missing.");
+  }
 
-  return Uint8Array.from([...raw].map((character) => character.charCodeAt(0)));
+  const normalized = value
+    .trim()
+    .replace(/^['"]+|['"]+$/g, "")
+    .replace(/,+$/g, "")
+    .replace(/\s+/g, "");
+
+  if (!normalized) {
+    throw new Error("The push notification public key is empty.");
+  }
+
+  if (!/^[A-Za-z0-9_-]+$/.test(normalized)) {
+    throw new Error(
+      "The push notification public key contains invalid characters.",
+    );
+  }
+
+  return normalized;
+}
+
+function urlBase64ToUint8Array(value) {
+  const normalized = normalizeVapidPublicKey(value);
+  const padding = "=".repeat((4 - (normalized.length % 4)) % 4);
+  const base64 = (normalized + padding)
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+
+  let raw;
+
+  try {
+    raw = window.atob(base64);
+  } catch {
+    throw new Error(
+      "The push notification public key could not be decoded. Check the VAPID_PUBLIC_KEY secret in Supabase.",
+    );
+  }
+
+  const bytes = Uint8Array.from(
+    [...raw].map((character) => character.charCodeAt(0)),
+  );
+
+  if (bytes.length !== 65 || bytes[0] !== 4) {
+    throw new Error(
+      "The push notification public key is not a valid VAPID public key.",
+    );
+  }
+
+  return bytes;
 }
 
 export function supportsPushNotifications() {
@@ -32,7 +78,7 @@ export async function getPushPublicKey() {
     throw new Error("Push notifications are not configured yet.");
   }
 
-  return data.publicKey;
+  return normalizeVapidPublicKey(data.publicKey);
 }
 
 export async function getCurrentPushSubscription() {
@@ -58,13 +104,12 @@ export async function subscribeToPushNotifications() {
   const registration = await navigator.serviceWorker.ready;
   const existingSubscription = await registration.pushManager.getSubscription();
   const publicKey = await getPushPublicKey();
+  const expectedKey = urlBase64ToUint8Array(publicKey);
 
   let subscription = existingSubscription;
 
   if (subscription) {
     const currentKey = subscription.options?.applicationServerKey;
-    const expectedKey = urlBase64ToUint8Array(publicKey);
-
     const currentBytes = currentKey ? new Uint8Array(currentKey) : null;
     const keysMatch =
       currentBytes &&
@@ -80,7 +125,7 @@ export async function subscribeToPushNotifications() {
   if (!subscription) {
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicKey),
+      applicationServerKey: expectedKey,
     });
   }
 
