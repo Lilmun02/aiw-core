@@ -12,6 +12,10 @@ export default defineConfig({
       registerType: "autoUpdate",
       workbox: {
         importScripts: ["/push-sw.js"],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        navigateFallbackDenylist: [/^\/assets\//],
       },
 
       manifest: {
