@@ -8,17 +8,12 @@ import ProfileHeader from "../components/profile/ProfileHeader";
 import SavedTab from "../components/profile/SavedTab";
 import SettingsTab from "../components/profile/SettingsTab";
 
-import {
-  removeAvatar,
-  uploadAvatar,
-} from "../lib/avatarStorage.js";
-
+import { removeAvatar, uploadAvatar } from "../lib/avatarStorage.js";
 import {
   getAchievementCount,
   getEarnedBadges,
   getFeaturedBadge,
 } from "../lib/profileBadges.js";
-
 import { supabase } from "../lib/supabase.js";
 
 const emptyStreak = {
@@ -34,6 +29,7 @@ function Profile() {
   const [user, setUser] = useState(null);
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const [accountRole, setAccountRole] = useState("user");
   const [streak, setStreak] = useState(emptyStreak);
   const [isFounderSupporter, setIsFounderSupporter] = useState(false);
 
@@ -45,8 +41,6 @@ function Profile() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
-
-  const founderEmail = "lilmunofficial18@gmail.com";
 
   useEffect(() => {
     let isMounted = true;
@@ -61,9 +55,7 @@ function Profile() {
         error: sessionError,
       } = await supabase.auth.getSession();
 
-      if (!isMounted) {
-        return;
-      }
+      if (!isMounted) return;
 
       if (sessionError) {
         setIsError(true);
@@ -91,38 +83,32 @@ function Profile() {
       );
 
       if (checkInError) {
-        console.error(
-          "Profile streak check-in failed:",
-          checkInError.message,
-        );
+        console.error("Profile streak check-in failed:", checkInError.message);
       }
 
-      const [profileResult, streakResult, supporterResult] =
-        await Promise.all([
-          supabase
-            .from("profiles")
-            .select("display_name, avatar_url")
-            .eq("id", currentUser.id)
-            .maybeSingle(),
+      const [profileResult, streakResult, supporterResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select(
+            "display_name, avatar_url, account_role, is_founding_supporter",
+          )
+          .eq("id", currentUser.id)
+          .maybeSingle(),
+        supabase
+          .from("user_streaks")
+          .select(
+            "current_streak, longest_streak, total_days, last_active_date",
+          )
+          .eq("user_id", currentUser.id)
+          .maybeSingle(),
+        supabase
+          .from("founder_supporters")
+          .select("user_id,status")
+          .eq("user_id", currentUser.id)
+          .maybeSingle(),
+      ]);
 
-          supabase
-            .from("user_streaks")
-            .select(
-              "current_streak, longest_streak, total_days, last_active_date",
-            )
-            .eq("user_id", currentUser.id)
-            .maybeSingle(),
-
-          supabase
-            .from("founder_supporters")
-            .select("user_id")
-            .eq("user_id", currentUser.id)
-            .maybeSingle(),
-        ]);
-
-      if (!isMounted) {
-        return;
-      }
+      if (!isMounted) return;
 
       if (streakResult.error) {
         console.error(
@@ -140,67 +126,73 @@ function Profile() {
         setStreak(emptyStreak);
       }
 
-      if (supporterResult.error) {
-        console.error(
-          "Unable to load Founder Supporter status:",
-          supporterResult.error.message,
-        );
-        setIsFounderSupporter(false);
-      } else {
-        setIsFounderSupporter(Boolean(supporterResult.data));
-      }
-
       if (profileResult.error) {
         setIsError(true);
         setMessage(profileResult.error.message);
         setDisplayName(defaultDisplayName);
         setAvatarUrl(null);
+        setAccountRole("user");
+        setIsFounderSupporter(false);
         setIsLoading(false);
         return;
+      }
+
+      const supporterActive =
+        Boolean(supporterResult.data) && supporterResult.data.status === "active";
+
+      if (supporterResult.error) {
+        console.error(
+          "Unable to load Founder Supporter status:",
+          supporterResult.error.message,
+        );
       }
 
       if (profileResult.data) {
-        setDisplayName(
-          profileResult.data.display_name || defaultDisplayName,
-        );
+        setDisplayName(profileResult.data.display_name || defaultDisplayName);
         setAvatarUrl(profileResult.data.avatar_url || null);
+        setAccountRole(profileResult.data.account_role || "user");
+        setIsFounderSupporter(
+          Boolean(profileResult.data.is_founding_supporter) || supporterActive,
+        );
         setIsLoading(false);
         return;
       }
 
-      const { data: createdProfile, error: createError } =
-        await supabase
-          .from("profiles")
-          .upsert(
-            {
-              id: currentUser.id,
-              display_name: defaultDisplayName,
-              avatar_url: null,
-            },
-            {
-              onConflict: "id",
-            },
-          )
-          .select("display_name, avatar_url")
-          .single();
+      const { data: createdProfile, error: createError } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            id: currentUser.id,
+            display_name: defaultDisplayName,
+            avatar_url: null,
+            account_role: "user",
+          },
+          { onConflict: "id" },
+        )
+        .select(
+          "display_name, avatar_url, account_role, is_founding_supporter",
+        )
+        .single();
 
-      if (!isMounted) {
-        return;
-      }
+      if (!isMounted) return;
 
       if (createError) {
         setIsError(true);
         setMessage(createError.message);
         setDisplayName(defaultDisplayName);
         setAvatarUrl(null);
+        setAccountRole("user");
+        setIsFounderSupporter(false);
         setIsLoading(false);
         return;
       }
 
-      setDisplayName(
-        createdProfile?.display_name || defaultDisplayName,
-      );
+      setDisplayName(createdProfile?.display_name || defaultDisplayName);
       setAvatarUrl(createdProfile?.avatar_url || null);
+      setAccountRole(createdProfile?.account_role || "user");
+      setIsFounderSupporter(
+        Boolean(createdProfile?.is_founding_supporter) || supporterActive,
+      );
       setIsLoading(false);
     }
 
@@ -209,10 +201,7 @@ function Profile() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      if (!isMounted) {
-        return;
-      }
-
+      if (!isMounted) return;
       if (event === "SIGNED_OUT" || !currentSession) {
         navigate("/login", { replace: true });
       }
@@ -224,8 +213,7 @@ function Profile() {
     };
   }, [navigate]);
 
-  const isFounder =
-    user?.email?.toLowerCase() === founderEmail.toLowerCase();
+  const isFounder = accountRole === "founder";
 
   const earnedBadges = useMemo(
     () =>
@@ -255,20 +243,14 @@ function Profile() {
   );
 
   async function handleUploadAvatar(file) {
-    if (!user || isUploadingAvatar || isRemovingAvatar) {
-      return;
-    }
+    if (!user || isUploadingAvatar || isRemovingAvatar) return;
 
     setIsUploadingAvatar(true);
     setMessage("");
     setIsError(false);
 
     try {
-      const uploadedAvatarUrl = await uploadAvatar({
-        userId: user.id,
-        file,
-      });
-
+      const uploadedAvatarUrl = await uploadAvatar({ userId: user.id, file });
       setAvatarUrl(uploadedAvatarUrl);
       setMessage("Profile picture updated successfully.");
     } catch (error) {
@@ -284,22 +266,9 @@ function Profile() {
   }
 
   async function handleRemoveAvatar() {
-    if (
-      !user ||
-      !avatarUrl ||
-      isUploadingAvatar ||
-      isRemovingAvatar
-    ) {
-      return;
-    }
+    if (!user || !avatarUrl || isUploadingAvatar || isRemovingAvatar) return;
 
-    const shouldRemove = window.confirm(
-      "Remove your current profile picture?",
-    );
-
-    if (!shouldRemove) {
-      return;
-    }
+    if (!window.confirm("Remove your current profile picture?")) return;
 
     setIsRemovingAvatar(true);
     setMessage("");
@@ -323,13 +292,9 @@ function Profile() {
 
   async function handleSave(event) {
     event.preventDefault();
-
-    if (!user) {
-      return;
-    }
+    if (!user) return;
 
     const cleanDisplayName = displayName.trim();
-
     if (!cleanDisplayName) {
       setIsError(true);
       setMessage("Please enter a display name.");
@@ -341,13 +306,8 @@ function Profile() {
     setIsError(false);
 
     const { error } = await supabase.from("profiles").upsert(
-      {
-        id: user.id,
-        display_name: cleanDisplayName,
-      },
-      {
-        onConflict: "id",
-      },
+      { id: user.id, display_name: cleanDisplayName },
+      { onConflict: "id" },
     );
 
     setIsSaving(false);
@@ -369,12 +329,10 @@ function Profile() {
 
     if (shouldScroll) {
       window.requestAnimationFrame(() => {
-        document
-          .getElementById("profile-tab-panel")
-          ?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
+        document.getElementById("profile-tab-panel")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
       });
     }
   }
@@ -391,10 +349,8 @@ function Profile() {
     switch (activeTab) {
       case "saved":
         return <SavedTab />;
-
       case "tools":
         return <MyToolsTab />;
-
       case "achievements":
         return (
           <AchievementsTab
@@ -403,7 +359,6 @@ function Profile() {
             streak={streak}
           />
         );
-
       case "settings":
         return (
           <SettingsTab
@@ -417,7 +372,6 @@ function Profile() {
             onCancel={() => changeTab("overview", true)}
           />
         );
-
       case "overview":
       default:
         return (
@@ -489,9 +443,7 @@ function Profile() {
             achievementCount={achievementCount}
             onBadgesClick={() => changeTab("achievements", true)}
             onStreakClick={() => changeTab("overview", true)}
-            onAchievementsClick={() =>
-              changeTab("achievements", true)
-            }
+            onAchievementsClick={() => changeTab("achievements", true)}
           />
 
           <nav className="border-y border-slate-800 px-4 sm:px-8">
