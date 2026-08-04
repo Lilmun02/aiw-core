@@ -1,20 +1,34 @@
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
 function Footer() {
-  function scrollToSection(sectionId) {
-    document
-      .getElementById(sectionId)
-      ?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  function goToSection(sectionId) {
+    if (location.pathname !== "/") {
+      navigate(`/#${sectionId}`);
+      window.setTimeout(() => {
+        document.getElementById(sectionId)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 150);
+      return;
+    }
+
+    document.getElementById(sectionId)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   }
 
   return (
     <footer className="border-t border-slate-800 bg-[#050a14]">
-      <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-3 lg:px-12">
+      <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-2 lg:grid-cols-4 lg:px-12">
         <div>
           <button
             type="button"
-            onClick={() => scrollToSection("home")}
+            onClick={() => goToSection("home")}
             className="flex items-center gap-3 text-xl font-extrabold text-white"
           >
             <span className="text-2xl">🤖</span>
@@ -37,7 +51,7 @@ function Footer() {
           <div className="mt-4 flex flex-col gap-3 text-sm text-slate-400">
             <button
               type="button"
-              onClick={() => scrollToSection("home")}
+              onClick={() => goToSection("home")}
               className="w-fit text-left transition hover:text-white"
             >
               Home
@@ -45,7 +59,7 @@ function Footer() {
 
             <button
               type="button"
-              onClick={() => scrollToSection("categories")}
+              onClick={() => goToSection("categories")}
               className="w-fit text-left transition hover:text-white"
             >
               Categories
@@ -53,7 +67,7 @@ function Footer() {
 
             <button
               type="button"
-              onClick={() => scrollToSection("featured")}
+              onClick={() => goToSection("featured")}
               className="w-fit text-left transition hover:text-white"
             >
               Featured Tools
@@ -61,7 +75,7 @@ function Footer() {
 
             <button
               type="button"
-              onClick={() => scrollToSection("submit-tool")}
+              onClick={() => goToSection("submit-tool")}
               className="w-fit text-left transition hover:text-white"
             >
               Submit a Tool
@@ -75,7 +89,7 @@ function Footer() {
           <div className="mt-4 flex flex-col gap-3 text-sm text-slate-400">
             <button
               type="button"
-              onClick={() => scrollToSection("submit-tool")}
+              onClick={() => goToSection("submit-tool")}
               className="w-fit text-left transition hover:text-white"
             >
               List Your AI Tool
@@ -83,7 +97,7 @@ function Footer() {
 
             <button
               type="button"
-              onClick={() => scrollToSection("submit-tool")}
+              onClick={() => goToSection("submit-tool")}
               className="w-fit text-left transition hover:text-white"
             >
               Partner With AIWCORE
@@ -91,11 +105,36 @@ function Footer() {
 
             <button
               type="button"
-              onClick={() => scrollToSection("submit-tool")}
+              onClick={() => goToSection("submit-tool")}
               className="w-fit text-left transition hover:text-white"
             >
               Featured Listing Inquiry
             </button>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="font-bold text-white">Legal & Support</h3>
+
+          <div className="mt-4 flex flex-col gap-3 text-sm text-slate-400">
+            <Link to="/terms" className="w-fit transition hover:text-white">
+              Terms of Service
+            </Link>
+
+            <Link to="/privacy" className="w-fit transition hover:text-white">
+              Privacy Policy
+            </Link>
+
+            <Link
+              to="/founder-support-terms"
+              className="w-fit transition hover:text-white"
+            >
+              Founder Support Terms
+            </Link>
+
+            <Link to="/feedback" className="w-fit transition hover:text-white">
+              Contact & Feedback
+            </Link>
           </div>
         </div>
       </div>
