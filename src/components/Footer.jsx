@@ -73,48 +73,32 @@ function Footer() {
               Featured Tools
             </button>
 
-            <button
-              type="button"
-              onClick={() => goToSection("submit-tool")}
-              className="w-fit text-left transition hover:text-white"
-            >
+            <Link to="/submit-tool" className="w-fit transition hover:text-white">
               Submit a Tool
-            </button>
+            </Link>
           </div>
         </div>
 
         <div>
-          <h3 className="font-bold text-white">For AI Companies</h3>
+          <h3 className="font-bold text-white">Get Involved</h3>
 
           <div className="mt-4 flex flex-col gap-3 text-sm text-slate-400">
-            <button
-              type="button"
-              onClick={() => goToSection("submit-tool")}
-              className="w-fit text-left transition hover:text-white"
-            >
-              List Your AI Tool
-            </button>
+            <Link to="/founder-support" className="w-fit transition hover:text-white">
+              Founder Support
+            </Link>
 
-            <button
-              type="button"
-              onClick={() => goToSection("submit-tool")}
-              className="w-fit text-left transition hover:text-white"
-            >
-              Partner With AIWCORE
-            </button>
+            <Link to="/feedback" className="w-fit transition hover:text-white">
+              Contact & Feedback
+            </Link>
 
-            <button
-              type="button"
-              onClick={() => goToSection("submit-tool")}
-              className="w-fit text-left transition hover:text-white"
-            >
-              Featured Listing Inquiry
-            </button>
+            <Link to="/profile" className="w-fit transition hover:text-white">
+              My AIWCORE Profile
+            </Link>
           </div>
         </div>
 
         <div>
-          <h3 className="font-bold text-white">Legal & Support</h3>
+          <h3 className="font-bold text-white">Legal</h3>
 
           <div className="mt-4 flex flex-col gap-3 text-sm text-slate-400">
             <Link to="/terms" className="w-fit transition hover:text-white">
@@ -130,10 +114,6 @@ function Footer() {
               className="w-fit transition hover:text-white"
             >
               Founder Support Terms
-            </Link>
-
-            <Link to="/feedback" className="w-fit transition hover:text-white">
-              Contact & Feedback
             </Link>
           </div>
         </div>
