@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AIWCORE</string>
+    <string name="title_activity_main">AIWCORE</string>
+    <string name="package_name">com.aiwcore.app</string>
+    <string name="custom_url_scheme">com.aiwcore.app</string>
+</resources>
