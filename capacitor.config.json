@@ -1,0 +1,9 @@
+{
+  "appId": "com.aiwcore.app",
+  "appName": "AIWCORE",
+  "webDir": "dist",
+  "server": {
+    "url": "https://aiw-core.vercel.app/",
+    "cleartext": false
+  }
+}
