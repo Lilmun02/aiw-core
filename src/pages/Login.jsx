@@ -1,4 +1,4 @@
- import { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
@@ -44,7 +44,7 @@ function Login() {
 
       setMessage("Login successful. Redirecting...");
 
-      window.location.replace("/profile");
+      window.location.replace("/");
     } catch (error) {
       setIsError(true);
       setMessage(error.message || "Unable to log in. Please try again.");
