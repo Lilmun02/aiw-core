@@ -1,4 +1,4 @@
- import AvatarUploader from "./AvatarUploader";
+import AvatarUploader from "./AvatarUploader";
 
 function AvatarCard({
   avatarUrl,
@@ -20,27 +20,23 @@ function AvatarCard({
         onRemove={onRemoveAvatar}
       />
 
-      <div className="pb-1">
-        <div className="mb-3 flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-black sm:text-4xl">
-            {displayName || "AIWCORE Member"}
-          </h1>
-
-          {isFounder && (
-            <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-bold text-amber-300">
-              👑 Original Founder
-            </span>
-          )}
-        </div>
-
-        <p className="text-lg font-bold text-blue-300">
-          {isFounder ? "Founder & CEO of AIWCORE" : "AIWCORE Member"}
+      <div className="min-w-0 pb-1">
+        <p className="mb-2 text-xs font-black uppercase tracking-[0.28em] text-blue-300">
+          AIWCORE Profile
         </p>
 
-        <p className="mt-2 text-sm font-medium text-slate-400">
+        <h1 className="break-words text-3xl font-black tracking-tight text-white sm:text-4xl">
+          {displayName || "AIWCORE Member"}
+        </h1>
+
+        <p className="mt-2 text-base font-bold text-slate-200 sm:text-lg">
+          {isFounder ? "Founder & CEO of AIWCORE" : "AI Explorer"}
+        </p>
+
+        <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-slate-400">
           {isFounder
-            ? "🚀 Founded July 4, 2026"
-            : "Exploring AI with AIWCORE"}
+            ? "Building AIWCORE and shaping a better way to discover AI tools."
+            : "Discovering, saving, and exploring useful AI across the AIWCORE ecosystem."}
         </p>
       </div>
     </div>
