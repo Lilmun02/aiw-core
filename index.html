@@ -13,7 +13,80 @@
     <title>AIWCORE</title>
     <script>
       (function () {
-        function showStartupError(message) {
+        var RECOVERY_KEY = "aiwcore-startup-recovery";
+
+        function escapeHtml(value) {
+          return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+        }
+
+        function isModuleLoadFailure(message) {
+          var text = String(message || "").toLowerCase();
+
+          return (
+            text.includes("importing a module script failed") ||
+            text.includes("failed to fetch dynamically imported module") ||
+            text.includes("error loading dynamically imported module") ||
+            text.includes("module script") ||
+            (text.includes("load failed") && text.includes("module"))
+          );
+        }
+
+        async function recoverFromStaleBuild() {
+          if (sessionStorage.getItem(RECOVERY_KEY) === "attempted") {
+            return false;
+          }
+
+          sessionStorage.setItem(RECOVERY_KEY, "attempted");
+
+          try {
+            if ("serviceWorker" in navigator) {
+              var registrations = await navigator.serviceWorker.getRegistrations();
+
+              await Promise.all(
+                registrations.map(function (registration) {
+                  return registration.update().catch(function () {
+                    return undefined;
+                  });
+                }),
+              );
+            }
+
+            if ("caches" in window) {
+              var cacheNames = await caches.keys();
+
+              await Promise.all(
+                cacheNames
+                  .filter(function (name) {
+                    var lowerName = name.toLowerCase();
+                    return (
+                      lowerName.includes("workbox") ||
+                      lowerName.includes("precache") ||
+                      lowerName.includes("vite")
+                    );
+                  })
+                  .map(function (name) {
+                    return caches.delete(name);
+                  }),
+              );
+            }
+          } catch (error) {
+            console.warn("AIWCORE startup recovery cleanup failed:", error);
+          }
+
+          await new Promise(function (resolve) {
+            window.setTimeout(resolve, 1200);
+          });
+
+          var url = new URL(window.location.href);
+          url.searchParams.set("__aiwcore_refresh", Date.now().toString());
+          window.location.replace(url.toString());
+          return true;
+        }
+
+        function renderStartupError(message) {
           window.setTimeout(function () {
             var root = document.getElementById("root");
             if (!root || root.childElementCount > 0) return;
@@ -24,27 +97,52 @@
               '<p style="margin:0 0 8px;color:#fca5a5;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:12px">AIWCORE startup error</p>' +
               '<h1 style="margin:0 0 14px;font-size:24px">The app could not start</h1>' +
               '<pre style="white-space:pre-wrap;overflow-wrap:anywhere;margin:0;color:#fecaca;font-size:14px;line-height:1.6">' +
-              String(message).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+              escapeHtml(message) +
               '</pre>' +
-              '<p style="margin:18px 0 0;color:#94a3b8;font-size:13px">Take a screenshot of this message so the issue can be fixed precisely.</p>' +
+              '<button type="button" onclick="window.location.reload()" style="margin-top:18px;border:0;border-radius:12px;background:#2563eb;color:white;padding:11px 16px;font-weight:700;cursor:pointer">Try again</button>' +
+              '<p style="margin:14px 0 0;color:#94a3b8;font-size:13px">If this appears again, take a screenshot so the issue can be diagnosed precisely.</p>' +
               '</section></main>';
           }, 0);
         }
 
-        window.addEventListener("error", function (event) {
-          showStartupError(event.error && event.error.stack ? event.error.stack : event.message);
-        });
+        function handleStartupFailure(message) {
+          if (isModuleLoadFailure(message)) {
+            recoverFromStaleBuild().then(function (recoveryStarted) {
+              if (!recoveryStarted) {
+                renderStartupError(message);
+              }
+            });
+            return;
+          }
+
+          renderStartupError(message);
+        }
+
+        window.addEventListener(
+          "error",
+          function (event) {
+            var message = event.error && event.error.stack ? event.error.stack : event.message;
+            handleStartupFailure(message || "A startup resource failed to load.");
+          },
+          true,
+        );
 
         window.addEventListener("unhandledrejection", function (event) {
           var reason = event.reason;
-          showStartupError(reason && reason.stack ? reason.stack : String(reason));
+          handleStartupFailure(reason && reason.stack ? reason.stack : String(reason));
         });
 
         window.setTimeout(function () {
           var root = document.getElementById("root");
-          if (root && root.childElementCount === 0) {
-            showStartupError("No React content was rendered. Check the browser console and Vercel environment variables.");
+
+          if (root && root.childElementCount > 0) {
+            sessionStorage.removeItem(RECOVERY_KEY);
+            return;
           }
+
+          handleStartupFailure(
+            "No React content was rendered. Check the browser console and deployment configuration.",
+          );
         }, 8000);
       })();
     </script>
