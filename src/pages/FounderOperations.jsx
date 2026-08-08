@@ -84,7 +84,7 @@ function FounderOperations() {
           .order("published_at", { ascending: false }),
         supabase
           .from("feedback")
-          .select("id, name, email, message, status, created_at")
+          .select("id, title, email, description, status, created_at")
           .order("created_at", { ascending: false }),
       ]);
 
@@ -103,7 +103,11 @@ function FounderOperations() {
     setPublishedTools(publishedResult.data || []);
     setRemovedTools(removedResult.data || []);
 
-    const feedback = feedbackResult.data || [];
+    const feedback = (feedbackResult.data || []).map((item) => ({
+      ...item,
+      name: item.title || "",
+      message: item.description || "",
+    }));
     setActiveFeedback(feedback.filter((item) => item.status !== "archived"));
     setArchivedFeedback(feedback.filter((item) => item.status === "archived"));
     setIsLoading(false);
@@ -287,12 +291,20 @@ function FounderOperations() {
       return;
     }
 
+    const normalizedData = data
+      ? {
+          ...data,
+          name: data.title || "",
+          message: data.description || "",
+        }
+      : data;
+
     if (status === "archived") {
       setActiveFeedback((current) => current.filter((entry) => entry.id !== item.id));
-      setArchivedFeedback((current) => [data, ...current]);
+      setArchivedFeedback((current) => [normalizedData, ...current]);
     } else {
       setActiveFeedback((current) =>
-        current.map((entry) => (entry.id === item.id ? data : entry)),
+        current.map((entry) => (entry.id === item.id ? normalizedData : entry)),
       );
     }
     setMessage(`Feedback marked as ${status}.`);
@@ -317,8 +329,16 @@ function FounderOperations() {
       return;
     }
 
+    const normalizedData = data
+      ? {
+          ...data,
+          name: data.title || "",
+          message: data.description || "",
+        }
+      : data;
+
     setArchivedFeedback((current) => current.filter((entry) => entry.id !== item.id));
-    setActiveFeedback((current) => [data, ...current]);
+    setActiveFeedback((current) => [normalizedData, ...current]);
     setMessage("Feedback restored to the active inbox.");
   }
 
