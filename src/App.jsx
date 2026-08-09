@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
@@ -6,6 +7,7 @@ import FeaturedTools from "./components/FeaturedTools.jsx";
 import FeedbackForm from "./components/FeedbackForm.jsx";
 import Footer from "./components/Footer.jsx";
 import Header from "./components/Header.jsx";
+import NativeBottomNav from "./components/NativeBottomNav.jsx";
 import Navbar from "./components/Navbar.jsx";
 import NotificationPrompt from "./components/NotificationPrompt.jsx";
 import SearchBar from "./components/SearchBar.jsx";
@@ -22,6 +24,8 @@ const LegalPage = lazy(() => import("./pages/LegalPage.jsx"));
 const Login = lazy(() => import("./pages/Login.jsx"));
 const Profile = lazy(() => import("./pages/Profile.jsx"));
 const Signup = lazy(() => import("./pages/Signup.jsx"));
+
+const isNativeApp = Capacitor.isNativePlatform();
 
 function LoadingScreen({ message = "Loading AIWCORE..." }) {
   return (
@@ -44,21 +48,27 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-[#070d1a] text-white">
-      <Navbar onLogoClick={resetHome} />
-      <main className="mx-auto w-full max-w-7xl px-5 pb-20 sm:px-8 lg:px-12">
+      {!isNativeApp && <Navbar onLogoClick={resetHome} />}
+      <main
+        className={`mx-auto w-full max-w-7xl sm:px-8 lg:px-12 ${
+          isNativeApp ? "px-4 pb-32" : "px-5 pb-20"
+        }`}
+      >
         <div id="home">
           <Header />
-          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+          <div id="search" className="scroll-mt-6">
+            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+          </div>
         </div>
-        <div id="categories">
+        <div id="categories" className="scroll-mt-6">
           <Categories setSearchTerm={setSearchTerm} />
         </div>
-        <div id="featured">
+        <div id="featured" className="scroll-mt-6">
           <FeaturedTools searchTerm={searchTerm} />
         </div>
         <SubmitTool />
       </main>
-      <Footer />
+      {!isNativeApp && <Footer />}
     </div>
   );
 }
@@ -66,13 +76,19 @@ function Home() {
 function SubmitToolPage() {
   return (
     <div className="min-h-screen bg-[#070d1a] text-white">
-      <Navbar
-        onLogoClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      />
-      <main className="mx-auto w-full max-w-5xl px-5 pb-20 pt-8 sm:px-8 lg:px-12">
+      {!isNativeApp && (
+        <Navbar
+          onLogoClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        />
+      )}
+      <main
+        className={`mx-auto w-full max-w-5xl px-5 pt-8 sm:px-8 lg:px-12 ${
+          isNativeApp ? "pb-32" : "pb-20"
+        }`}
+      >
         <SubmitTool />
       </main>
-      <Footer />
+      {!isNativeApp && <Footer />}
     </div>
   );
 }
@@ -80,7 +96,11 @@ function SubmitToolPage() {
 function FeedbackPage() {
   return (
     <div className="min-h-screen bg-[#070d1a] text-white">
-      <main className="mx-auto w-full max-w-4xl px-5 py-12 sm:px-8">
+      <main
+        className={`mx-auto w-full max-w-4xl px-5 pt-8 sm:px-8 ${
+          isNativeApp ? "pb-32" : "pb-12"
+        }`}
+      >
         <FeedbackForm />
       </main>
     </div>
@@ -119,6 +139,16 @@ function LazyRoute({ children }) {
 }
 
 function App() {
+  useEffect(() => {
+    if (!isNativeApp) return undefined;
+
+    document.documentElement.classList.add("native-app");
+
+    return () => {
+      document.documentElement.classList.remove("native-app");
+    };
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     const checkedUsers = new Set();
@@ -297,6 +327,7 @@ function App() {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      {isNativeApp && <NativeBottomNav />}
       <NotificationPrompt />
     </>
   );
