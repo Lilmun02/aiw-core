@@ -25,47 +25,71 @@ body {
   box-sizing: border-box;
 }
 
-/* Installed AIWCORE app only */
+/* Installed PWA only. Explicitly excludes the Capacitor native app. */
 @media (display-mode: standalone) {
-  html {
+  html:not(.native-app) {
+    position: static !important;
     width: 100%;
+    height: auto !important;
     min-height: 100%;
     overflow-x: hidden;
+    overflow-y: auto !important;
+    overscroll-behavior-y: auto;
+    touch-action: pan-y;
     scroll-padding-top: calc(90px + env(safe-area-inset-top));
+    background-color: #070d1a;
   }
 
-  body {
+  html:not(.native-app) body {
+    position: static !important;
     width: 100%;
+    height: auto !important;
     min-width: 0;
     min-height: 100dvh;
     overflow-x: hidden;
+    overflow-y: auto !important;
+    overscroll-behavior-y: auto;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    padding-top: 0;
     padding-right: env(safe-area-inset-right);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: 0;
     padding-left: env(safe-area-inset-left);
   }
 
-  #root {
+  html:not(.native-app) #root {
+    position: static !important;
     width: 100%;
+    height: auto !important;
     min-height: 100dvh;
-    overflow-x: clip;
+    overflow-x: hidden;
+    overflow-y: visible !important;
+    touch-action: pan-y;
   }
 
-  nav {
+  html:not(.native-app) nav {
     padding-top: env(safe-area-inset-top);
   }
 
-  main,
-  section,
-  header,
-  footer {
+  html:not(.native-app) main,
+  html:not(.native-app) section,
+  html:not(.native-app) header,
+  html:not(.native-app) footer {
     max-width: 100%;
+    touch-action: pan-y;
   }
 
-  input,
-  textarea,
-  select,
-  button {
+  html:not(.native-app) input,
+  html:not(.native-app) textarea,
+  html:not(.native-app) select,
+  html:not(.native-app) button {
     font-size: 16px;
+  }
+
+  /* Never let the web drawer leave the installed PWA body permanently locked. */
+  html:not(.native-app) body[style*="overflow"] {
+    overflow-y: auto !important;
+    touch-action: pan-y !important;
   }
 }
 
