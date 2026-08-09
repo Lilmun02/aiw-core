@@ -30,8 +30,10 @@ function SearchBar({ searchTerm, setSearchTerm }) {
 
         <button
           type="submit"
-          className={`shrink-0 bg-violet-600 font-semibold text-white transition hover:bg-violet-500 ${
-            isNativeApp ? "px-5" : "px-8"
+          className={`shrink-0 font-semibold text-white transition ${
+            isNativeApp
+              ? "bg-violet-600 px-5 hover:bg-violet-500"
+              : "bg-blue-600 px-8 hover:bg-blue-500"
           }`}
         >
           Search
