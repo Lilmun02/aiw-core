@@ -1,4 +1,4 @@
- import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 function FeedbackForm() {
@@ -6,25 +6,63 @@ function FeedbackForm() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [email, setEmail] = useState("");
+  const [accountEmail, setAccountEmail] = useState("");
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    function applySession(session) {
+      if (!isMounted) return;
+
+      const sessionEmail = session?.user?.email?.trim() || "";
+      setAccountEmail(sessionEmail);
+
+      if (sessionEmail) {
+        setEmail(sessionEmail);
+      }
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      applySession(data.session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      applySession(session);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage("");
 
+    const cleanEmail = email.trim();
+
+    if (!cleanEmail) {
+      setMessage("Email is required so AIWCORE can follow up on your feedback.");
+      return;
+    }
+
     const { error } = await supabase.from("feedback").insert([
       {
         category,
-        title,
-        description,
-        email: email || null,
+        title: title.trim(),
+        description: description.trim(),
+        email: cleanEmail,
         status: "new",
       },
     ]);
 
     if (error) {
       console.error(error);
-      setMessage("Something went wrong. Please try again.");
+      setMessage(error.message || "Something went wrong. Please try again.");
       return;
     }
 
@@ -32,7 +70,7 @@ function FeedbackForm() {
     setCategory("General Feedback");
     setTitle("");
     setDescription("");
-    setEmail("");
+    setEmail(accountEmail || "");
   }
 
   return (
@@ -42,9 +80,7 @@ function FeedbackForm() {
           Help Shape AIWCORE
         </p>
 
-        <h2 className="mt-2 text-3xl font-bold text-white">
-          Send Feedback
-        </h2>
+        <h2 className="mt-2 text-3xl font-bold text-white">Send Feedback</h2>
 
         <p className="mt-2 text-slate-400">
           Report a bug, suggest a feature, or tell us what you think.
@@ -53,17 +89,17 @@ function FeedbackForm() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <select
-  id="feedback-category"
-  name="category"
-  value={category}
-  onChange={(event) => setCategory(event.target.value)}
-  autoComplete="off"
-  className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-white"
->
-  <option>General Feedback</option>
-  <option>Bug Report</option>
-  <option>Feature Request</option>
-</select>
+          id="feedback-category"
+          name="category"
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+          autoComplete="off"
+          className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-white"
+        >
+          <option>General Feedback</option>
+          <option>Bug Report</option>
+          <option>Feature Request</option>
+        </select>
 
         <input
           id="feedback-title"
@@ -89,16 +125,25 @@ function FeedbackForm() {
           className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-white"
         />
 
-        <input
-          id="feedback-email"
-          name="email"
-          type="email"
-          placeholder="Email (optional)"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          autoComplete="email"
-          className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-white"
-        />
+        <div>
+          <input
+            id="feedback-email"
+            name="email"
+            type="email"
+            placeholder="Email address"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+            readOnly={Boolean(accountEmail)}
+            required
+            className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-white read-only:cursor-not-allowed read-only:text-slate-300"
+          />
+          <p className="mt-2 text-xs text-slate-500">
+            {accountEmail
+              ? "Using your AIWCORE account email for follow-up."
+              : "Email is required and stays private. AIWCORE may use it to follow up on your feedback."}
+          </p>
+        </div>
 
         <button
           type="submit"
@@ -107,11 +152,7 @@ function FeedbackForm() {
           Submit Feedback
         </button>
 
-        {message && (
-          <p className="text-sm text-slate-300">
-            {message}
-          </p>
-        )}
+        {message && <p className="text-sm text-slate-300">{message}</p>}
       </form>
     </section>
   );
