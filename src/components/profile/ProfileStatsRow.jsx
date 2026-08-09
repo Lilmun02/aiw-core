@@ -9,17 +9,19 @@ function ProfileStatsRow({
   const stats = [
     {
       id: "badges",
-      icon: "🏅",
+      icon: "✦",
       value: badgeCount,
       label: "Badges",
       onClick: onBadgesClick,
+      accent: "text-violet-300",
     },
     {
       id: "streak",
       icon: "🔥",
       value: currentStreak,
-      label: "Streak",
+      label: "Day Streak",
       onClick: onStreakClick,
+      accent: "text-orange-300",
     },
     {
       id: "achievements",
@@ -27,31 +29,28 @@ function ProfileStatsRow({
       value: achievementCount,
       label: "Achievements",
       onClick: onAchievementsClick,
+      accent: "text-emerald-300",
     },
   ];
 
   return (
-    <div className="grid grid-cols-3 border-y border-slate-800/80 py-5">
-      {stats.map((stat, index) => (
+    <div className="grid grid-cols-3 gap-2">
+      {stats.map((stat) => (
         <button
           key={stat.id}
           type="button"
           onClick={stat.onClick}
-          className={`flex min-w-0 flex-col items-center justify-center px-1 text-center transition active:scale-[0.98] sm:px-3 ${
-            stat.onClick
-              ? "cursor-pointer hover:text-white"
-              : "cursor-default"
-          } ${index > 0 ? "border-l border-slate-800/80" : ""}`}
+          className="min-w-0 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-2 py-4 text-center transition hover:border-violet-400/25 hover:bg-white/[0.055] active:scale-[0.98] sm:px-4"
         >
-          <span className="text-2xl" aria-hidden="true">
+          <span className={`block text-xl font-black ${stat.accent}`} aria-hidden="true">
             {stat.icon}
           </span>
 
-          <span className="mt-2 text-2xl font-black text-white">
+          <span className="mt-2 block text-2xl font-black text-white">
             {stat.value}
           </span>
 
-          <span className="mt-1 w-full whitespace-normal break-words text-[10px] font-bold uppercase leading-tight tracking-normal text-slate-500 sm:text-xs sm:tracking-[0.08em]">
+          <span className="mt-1 block truncate text-[9px] font-black uppercase tracking-[0.08em] text-slate-500 sm:text-[10px]">
             {stat.label}
           </span>
         </button>

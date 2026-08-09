@@ -10,7 +10,7 @@ function AvatarCard({
   onRemoveAvatar,
 }) {
   return (
-    <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
+    <div className="flex flex-col items-center text-center">
       <AvatarUploader
         avatarUrl={avatarUrl}
         displayName={displayName}
@@ -20,23 +20,23 @@ function AvatarCard({
         onRemove={onRemoveAvatar}
       />
 
-      <div className="min-w-0 pb-1">
-        <p className="mb-2 text-xs font-black uppercase tracking-[0.28em] text-blue-300">
+      <div className="mt-5 min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-[0.28em] text-violet-300">
           AIWCORE Profile
         </p>
 
-        <h1 className="break-words text-3xl font-black tracking-tight text-white sm:text-4xl">
+        <h1 className="mt-2 break-words text-3xl font-black tracking-tight text-white sm:text-4xl">
           {displayName || "AIWCORE Member"}
         </h1>
 
-        <p className="mt-2 text-base font-bold text-slate-200 sm:text-lg">
-          {isFounder ? "Founder & CEO of AIWCORE" : "AI Explorer"}
+        <p className="mt-2 text-sm font-black text-violet-300 sm:text-base">
+          {isFounder ? "Founder" : "AI Explorer"}
         </p>
 
-        <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-slate-400">
+        <p className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-slate-400">
           {isFounder
-            ? "Building AIWCORE and shaping a better way to discover AI tools."
-            : "Discovering, saving, and exploring useful AI across the AIWCORE ecosystem."}
+            ? "Building AIWCORE and shaping a better way to discover useful AI."
+            : "Exploring AIWCORE, building progress, and discovering useful AI tools."}
         </p>
       </div>
     </div>

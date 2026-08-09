@@ -36,116 +36,92 @@ function SettingsTab({
   }
 
   return (
-    <section className="mx-auto max-w-3xl">
-      <div className="mb-8">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">
-          Account Settings
+    <section className="space-y-4">
+      <div className="rounded-3xl border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-300">
+          Profile Settings
+        </p>
+        <h2 className="mt-1 text-xl font-black text-white">Edit your profile</h2>
+        <p className="mt-2 text-xs leading-5 text-slate-500">
+          Update the information currently supported on your AIWCORE profile.
         </p>
 
-        <h2 className="mt-2 text-3xl font-black">
-          Edit your profile
-        </h2>
+        <form onSubmit={saveProfile} className="mt-6 space-y-5">
+          <div>
+            <label htmlFor="displayName" className="mb-2 block text-xs font-black text-slate-300">
+              Display name
+            </label>
+            <input
+              id="displayName"
+              type="text"
+              value={displayName}
+              onChange={(event) => setDisplayName(event.target.value)}
+              maxLength={50}
+              required
+              className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/15"
+              placeholder="Enter your display name"
+            />
+          </div>
 
-        <p className="mt-2 text-sm leading-6 text-slate-400">
-          Update the information displayed on your AIWCORE profile.
-        </p>
+          <div>
+            <label htmlFor="email" className="mb-2 block text-xs font-black text-slate-300">
+              Email address
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={accountEmail}
+              readOnly
+              className="w-full cursor-not-allowed rounded-2xl border border-white/[0.06] bg-black/15 px-4 py-3.5 text-sm text-slate-500"
+            />
+            <p className="mt-2 text-[10px] leading-4 text-slate-600">
+              Your login email is managed securely through your AIWCORE account.
+            </p>
+          </div>
+
+          {message && (
+            <div
+              role={isError ? "alert" : "status"}
+              className={`rounded-2xl border px-4 py-3 text-xs font-semibold ${
+                isError
+                  ? "border-red-500/30 bg-red-500/10 text-red-300"
+                  : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+              }`}
+            >
+              {message}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="submit"
+              disabled={isSaving || !saveProfile}
+              className="rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-3 text-sm font-black text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSaving ? "Saving..." : "Save Profile"}
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm font-black text-slate-300 transition hover:border-violet-400/25 hover:text-white"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
 
-      <form
-        onSubmit={saveProfile}
-        className="space-y-6 rounded-3xl border border-slate-800 bg-[#0a1221] p-6 sm:p-8"
-      >
-        <div>
-          <label
-            htmlFor="displayName"
-            className="mb-2 block text-sm font-bold text-slate-200"
-          >
-            Display name
-          </label>
-
-          <input
-            id="displayName"
-            type="text"
-            value={displayName}
-            onChange={(event) => setDisplayName(event.target.value)}
-            maxLength={50}
-            required
-            className="w-full rounded-xl border border-slate-700 bg-[#111c31] px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-            placeholder="Enter your display name"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="email"
-            className="mb-2 block text-sm font-bold text-slate-200"
-          >
-            Email address
-          </label>
-
-          <input
-            id="email"
-            type="email"
-            value={accountEmail}
-            readOnly
-            className="w-full cursor-not-allowed rounded-xl border border-slate-800 bg-[#070d1a] px-4 py-3 text-slate-500"
-          />
-
-          <p className="mt-2 text-xs text-slate-500">
-            Your login email is managed securely through Supabase.
-          </p>
-        </div>
-
-        {message && (
-          <div
-            role={isError ? "alert" : "status"}
-            className={`rounded-xl border px-4 py-3 text-sm ${
-              isError
-                ? "border-red-500/30 bg-red-500/10 text-red-300"
-                : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-            }`}
-          >
-            {message}
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="submit"
-            disabled={isSaving || !saveProfile}
-            className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSaving ? "Saving..." : "Save Profile"}
-          </button>
-
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-xl border border-slate-700 px-6 py-3 font-bold text-slate-300 transition hover:border-slate-500 hover:text-white"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-
-      <section className="mt-8 border-t border-slate-800 pt-8">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+      <div className="rounded-3xl border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
           Account Access
         </p>
-
-        <h3 className="mt-2 text-xl font-black text-white">
-          Sign out of AIWCORE
-        </h3>
-
-        <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
+        <h3 className="mt-1 text-lg font-black text-white">Sign out of AIWCORE</h3>
+        <p className="mt-2 text-xs leading-5 text-slate-500">
           You can sign back in at any time using your account email.
         </p>
 
         {logoutError && (
-          <div
-            role="alert"
-            className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
-          >
+          <div role="alert" className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-300">
             {logoutError}
           </div>
         )}
@@ -154,11 +130,11 @@ function SettingsTab({
           type="button"
           onClick={handleLogout}
           disabled={isLoggingOut}
-          className="mt-5 rounded-xl border border-red-500/40 px-6 py-3 font-bold text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-5 w-full rounded-2xl border border-red-500/30 bg-red-500/[0.06] px-5 py-3 text-sm font-black text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isLoggingOut ? "Logging Out..." : "Log Out"}
         </button>
-      </section>
+      </div>
     </section>
   );
 }
