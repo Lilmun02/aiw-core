@@ -1,4 +1,8 @@
- function SearchBar({ searchTerm, setSearchTerm }) {
+import { Capacitor } from "@capacitor/core";
+
+function SearchBar({ searchTerm, setSearchTerm }) {
+  const isNativeApp = Capacitor.isNativePlatform();
+
   function handleSubmit(event) {
     event.preventDefault();
 
@@ -8,7 +12,7 @@
   }
 
   return (
-    <section className="mt-10 flex justify-center">
+    <section className={`${isNativeApp ? "mt-5" : "mt-10"} flex justify-center`}>
       <form
         onSubmit={handleSubmit}
         className="flex w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-lg"
@@ -17,14 +21,18 @@
           type="text"
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
-          placeholder="Search AI tools, categories, or features..."
+          placeholder={isNativeApp ? "Search AI tools..." : "Search AI tools, categories, or features..."}
           aria-label="Search AI tools"
-          className="flex-1 bg-transparent px-6 py-4 text-white placeholder:text-slate-500 focus:outline-none"
+          className={`min-w-0 flex-1 bg-transparent text-white placeholder:text-slate-500 focus:outline-none ${
+            isNativeApp ? "px-4 py-3" : "px-6 py-4"
+          }`}
         />
 
         <button
           type="submit"
-          className="bg-blue-600 px-8 font-semibold text-white transition hover:bg-blue-500"
+          className={`shrink-0 bg-violet-600 font-semibold text-white transition hover:bg-violet-500 ${
+            isNativeApp ? "px-5" : "px-8"
+          }`}
         >
           Search
         </button>
