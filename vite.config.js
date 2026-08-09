@@ -15,7 +15,12 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        navigateFallbackDenylist: [/^\/assets\//],
+
+        // Do not cache the HTML app shell. Every launch/navigation should get
+        // the current index.html from Vercel, which prevents an older PWA shell
+        // from referencing Vite asset files that no longer exist after deploys.
+        globPatterns: ["**/*.{js,css,ico,png,svg,webp,woff,woff2}"],
+        navigateFallback: null,
       },
 
       manifest: {
