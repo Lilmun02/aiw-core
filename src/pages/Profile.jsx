@@ -23,6 +23,14 @@ const emptyStreak = {
   last_active_date: null,
 };
 
+const tabs = [
+  { id: "overview", label: "Overview", icon: "▦" },
+  { id: "saved", label: "Saved", icon: "⌑" },
+  { id: "tools", label: "Tools", icon: "◇" },
+  { id: "achievements", label: "Awards", icon: "✦" },
+  { id: "settings", label: "More", icon: "•••" },
+];
+
 function Profile() {
   const navigate = useNavigate();
 
@@ -337,14 +345,6 @@ function Profile() {
     }
   }
 
-  const tabs = [
-    { id: "overview", label: "Overview" },
-    { id: "saved", label: "Saved AI" },
-    { id: "tools", label: "My Tools" },
-    { id: "achievements", label: "Achievements" },
-    { id: "settings", label: "Settings" },
-  ];
-
   function renderActiveTab() {
     switch (activeTab) {
       case "saved":
@@ -377,6 +377,9 @@ function Profile() {
         return (
           <OverviewTab
             displayName={displayName}
+            email={user?.email || ""}
+            joinedAt={user?.created_at || null}
+            isFounder={isFounder}
             streak={streak}
             featuredBadge={featuredBadge}
           />
@@ -386,9 +389,9 @@ function Profile() {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#070d1a] px-5 text-white">
+      <main className="flex min-h-screen items-center justify-center bg-[#05070d] px-5 text-white">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-blue-500" />
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-800 border-t-violet-500" />
           <p className="text-slate-300">Loading My AIWCORE...</p>
         </div>
       </main>
@@ -396,44 +399,54 @@ function Profile() {
   }
 
   return (
-    <main className="min-h-screen bg-[#070d1a] text-white">
-      <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
-        <div className="relative z-10 mb-6 flex flex-wrap items-center justify-between gap-4">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#151026_0%,#080a12_30%,#05070d_72%)] pb-28 text-white md:pb-10">
+      <div className="mx-auto w-full max-w-3xl px-3 py-4 sm:px-6 sm:py-7">
+        <div className="mb-4 flex items-center justify-between px-1">
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="text-sm font-semibold text-slate-400 transition hover:text-white"
+            aria-label="Return to AIWCORE"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-xl text-slate-200 transition hover:border-violet-400/40 hover:text-white active:scale-95"
           >
-            ← Return to AIWCORE
+            ←
           </button>
+
+          <div className="text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-violet-300">
+              AIWCORE
+            </p>
+            <p className="mt-0.5 text-sm font-black text-white">My Profile</p>
+          </div>
 
           <button
             type="button"
             onClick={() => changeTab("settings", true)}
-            className="relative z-20 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-blue-500 hover:text-white active:scale-[0.98]"
+            aria-label="Open profile settings"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-lg text-slate-200 transition hover:border-violet-400/40 hover:text-white active:scale-95"
           >
-            ⚙ Settings
+            ⚙
           </button>
         </div>
 
         {message && activeTab !== "settings" && (
           <div
             role={isError ? "alert" : "status"}
-            className={`mb-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${
+            className={`mb-4 rounded-2xl border px-4 py-3 text-sm font-semibold ${
               isError
-                ? "border-red-500/40 bg-red-500/10 text-red-200"
-                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+                ? "border-red-500/30 bg-red-500/10 text-red-200"
+                : "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
             }`}
           >
             {message}
           </div>
         )}
 
-        <section className="overflow-hidden rounded-3xl border border-slate-800 bg-[#0d1526] shadow-2xl">
+        <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[#0a0d15]/95 shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur">
           <ProfileHeader
             avatarUrl={avatarUrl}
             displayName={displayName}
             isFounder={isFounder}
+            joinedAt={user?.created_at || null}
             isUploadingAvatar={isUploadingAvatar}
             isRemovingAvatar={isRemovingAvatar}
             onUploadAvatar={handleUploadAvatar}
@@ -446,20 +459,25 @@ function Profile() {
             onAchievementsClick={() => changeTab("achievements", true)}
           />
 
-          <nav className="border-y border-slate-800 px-4 sm:px-8">
-            <div className="flex gap-1 overflow-x-auto">
+          <nav className="mx-3 mb-3 rounded-2xl border border-white/10 bg-[#080b12]/90 p-1.5 sm:mx-5">
+            <div className="grid grid-cols-5 gap-1">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => changeTab(tab.id, true)}
-                  className={`whitespace-nowrap border-b-2 px-4 py-4 text-sm font-bold transition ${
+                  className={`min-w-0 rounded-xl px-1 py-2.5 text-center transition active:scale-[0.97] ${
                     activeTab === tab.id
-                      ? "border-blue-500 text-white"
-                      : "border-transparent text-slate-400 hover:text-white"
+                      ? "bg-violet-500/15 text-violet-300 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]"
+                      : "text-slate-500 hover:bg-white/[0.04] hover:text-slate-200"
                   }`}
                 >
-                  {tab.label}
+                  <span className="block text-base font-black leading-none" aria-hidden="true">
+                    {tab.icon}
+                  </span>
+                  <span className="mt-1.5 block truncate text-[10px] font-bold sm:text-xs">
+                    {tab.label}
+                  </span>
                 </button>
               ))}
             </div>
@@ -467,12 +485,61 @@ function Profile() {
 
           <div
             id="profile-tab-panel"
-            className="scroll-mt-6 p-6 sm:p-8 lg:p-10"
+            className="scroll-mt-4 border-t border-white/[0.06] p-3 sm:p-5"
           >
             {renderActiveTab()}
           </div>
         </section>
       </div>
+
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#070910]/95 px-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl md:hidden">
+        <div className="mx-auto grid max-w-xl grid-cols-5 gap-1">
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="rounded-xl px-1 py-2 text-center text-slate-500 transition active:scale-95"
+          >
+            <span className="block text-lg">⌂</span>
+            <span className="text-[10px] font-bold">Home</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => window.location.assign("/#categories")}
+            className="rounded-xl px-1 py-2 text-center text-slate-500 transition active:scale-95"
+          >
+            <span className="block text-lg">▦</span>
+            <span className="text-[10px] font-bold">Categories</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => window.location.assign("/#home")}
+            className="rounded-xl px-1 py-2 text-center text-slate-500 transition active:scale-95"
+          >
+            <span className="block text-lg">⌕</span>
+            <span className="text-[10px] font-bold">Search</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => changeTab("saved", true)}
+            className={`rounded-xl px-1 py-2 text-center transition active:scale-95 ${
+              activeTab === "saved" ? "text-violet-300" : "text-slate-500"
+            }`}
+          >
+            <span className="block text-lg">☆</span>
+            <span className="text-[10px] font-bold">Saved</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => changeTab("overview", true)}
+            className={`rounded-xl px-1 py-2 text-center transition active:scale-95 ${
+              activeTab !== "saved" ? "text-violet-300" : "text-slate-500"
+            }`}
+          >
+            <span className="block text-lg">●</span>
+            <span className="text-[10px] font-bold">Profile</span>
+          </button>
+        </div>
+      </nav>
     </main>
   );
 }
